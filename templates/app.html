@@ -1,0 +1,506 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Cloud Platform{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="w-64 glass-strong border-r border-cyan-500/10 flex flex-col">
+        <!-- Logo -->
+        <div class="p-6 border-b border-cyan-500/10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl glass neon-border flex items-center justify-center">
+                    <svg class="w-6 h-6 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-white">Cloud Platform</h1>
+                    <p class="text-xs text-gray-500">GPU Execution</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="/app" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-xl text-white">
+                <svg class="w-5 h-5 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            
+            <a href="#editor" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white" onclick="scrollToEditor()">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+                <span>Run Script</span>
+            </a>
+            
+            <a href="/history" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>History</span>
+            </a>
+            
+            <div class="pt-4 border-t border-cyan-500/10 mt-4">
+                <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- User Section -->
+        <div class="p-4 border-t border-cyan-500/10">
+            <div class="flex items-center gap-3 p-3 rounded-xl glass">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-neon-cyan to-neon-purple flex items-center justify-center text-white font-semibold" id="userAvatar">
+                    U
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-white truncate" id="userName">User</p>
+                    <p class="text-xs text-gray-500 truncate" id="userEmail">user@cloud.com</p>
+                </div>
+                <button onclick="logout()" class="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="flex-1 overflow-auto">
+        <!-- Top Bar -->
+        <header class="glass-strong border-b border-cyan-500/10 px-8 py-4 sticky top-0 z-10">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Cloud Python Execution Platform</h2>
+                    <p class="text-gray-400 text-sm">Run Python scripts on GPU-powered infrastructure</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- GPU Status -->
+                    <div class="flex items-center gap-2 px-4 py-2 rounded-xl glass neon-border">
+                        <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                        <span class="text-sm text-gray-300">GPU Online</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Dashboard Content -->
+        <div class="p-8 space-y-8">
+            <!-- Stats Grid -->
+            <section>
+                <h3 class="text-lg font-semibold text-white mb-4">System Status</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- CPU Card -->
+                    <div class="stat-card glass rounded-2xl p-6 neon-border">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-gray-500">CPU</span>
+                        </div>
+                        <p class="text-3xl font-bold text-white" id="cpuUsage">23%</p>
+                        <p class="text-sm text-gray-400">Intel Xeon W-2295</p>
+                        <div class="mt-3 h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all" style="width: 23%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- GPU Card -->
+                    <div class="stat-card glass rounded-2xl p-6 neon-border-purple">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-gray-500">GPU</span>
+                        </div>
+                        <p class="text-3xl font-bold text-white" id="gpuUsage">67%</p>
+                        <p class="text-sm text-gray-400">NVIDIA RTX 4090</p>
+                        <div class="mt-3 h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-purple-500 to-pink-400 rounded-full transition-all" style="width: 67%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- RAM Card -->
+                    <div class="stat-card glass rounded-2xl p-6 neon-border">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-gray-500">RAM</span>
+                        </div>
+                        <p class="text-3xl font-bold text-white" id="ramUsage">45%</p>
+                        <p class="text-sm text-gray-400">14.4 / 32 GB</p>
+                        <div class="mt-3 h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-cyan-500 to-teal-400 rounded-full transition-all" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Active Jobs Card -->
+                    <div class="stat-card glass rounded-2xl p-6 neon-border">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-gray-500">JOBS</span>
+                        </div>
+                        <p class="text-3xl font-bold text-white" id="activeJobs">3</p>
+                        <p class="text-sm text-gray-400">Active Jobs</p>
+                        <div class="mt-3 flex gap-1">
+                            <div class="flex-1 h-2 bg-green-500/50 rounded-full"></div>
+                            <div class="flex-1 h-2 bg-yellow-500/50 rounded-full"></div>
+                            <div class="flex-1 h-2 bg-blue-500/50 rounded-full"></div>
+                            <div class="flex-1 h-2 bg-gray-700 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Editor Section -->
+            <section id="editor" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Python Script Editor -->
+                <div class="glass rounded-2xl neon-border overflow-hidden">
+                    <div class="px-6 py-4 border-b border-cyan-500/10 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="flex gap-1.5">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <h3 class="font-semibold text-white">Python Script Editor</h3>
+                        </div>
+                        <button onclick="loadExampleCode()" class="text-xs px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition">
+                            Load Example
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <div class="relative">
+                            <!-- Line numbers -->
+                            <div class="absolute left-0 top-0 bottom-0 w-12 bg-gray-900/50 rounded-l-xl flex flex-col items-end pr-2 pt-4 text-gray-600 text-sm font-mono select-none" id="lineNumbers">
+                                <span>1</span>
+                            </div>
+                            <textarea 
+                                id="codeEditor"
+                                class="code-editor w-full h-80 pl-14 pr-4 py-4 rounded-xl text-green-400 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                                placeholder="# Enter your Python code here..."
+                                spellcheck="false"
+                            ># GPU-accelerated Python script
+import numpy as np
+
+# Create sample data
+data = np.random.randn(1000, 1000)
+
+# Perform computation
+result = np.dot(data, data.T)
+
+print(f"Matrix shape: {result.shape}")
+print(f"Sum: {result.sum():.2f}")
+print("Computation complete!")</textarea>
+                        </div>
+                        
+                        <!-- Options -->
+                        <div class="mt-4 flex flex-wrap items-center gap-4">
+                            <label class="flex items-center gap-2 text-sm text-gray-400">
+                                <input type="checkbox" id="gpuEnabled" checked class="w-4 h-4 rounded bg-gray-800 border-gray-600 text-cyan-500 focus:ring-cyan-500">
+                                <span>Enable GPU</span>
+                            </label>
+                            
+                            <div class="flex-1"></div>
+                            
+                            <button 
+                                onclick="runScript()"
+                                id="runButton"
+                                class="btn-primary px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-lg shadow-cyan-500/20"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span id="runButtonText">Run on GPU</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Output / Console -->
+                <div class="glass rounded-2xl neon-border overflow-hidden">
+                    <div class="px-6 py-4 border-b border-cyan-500/10 flex items-center justify-between">
+                        <h3 class="font-semibold text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Console Output
+                        </h3>
+                        <button onclick="clearConsole()" class="text-xs px-3 py-1.5 rounded-lg bg-gray-500/10 text-gray-400 hover:bg-gray-500/20 transition">
+                            Clear
+                        </button>
+                    </div>
+                    <div id="consoleOutput" class="p-4 h-80 overflow-auto font-mono text-sm">
+                        <div class="text-gray-500">
+                            <p>// Console ready</p>
+                            <p>// Submit a script to see output here</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Recent Jobs -->
+            <section>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-white">Recent Jobs</h3>
+                    <a href="/history" class="text-sm text-cyan-400 hover:text-cyan-300 transition flex items-center gap-1">
+                        View All
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="glass rounded-2xl neon-border overflow-hidden">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-cyan-500/10">
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Job ID</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">GPU</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Submitted</th>
+                                <th class="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentJobsTable" class="divide-y divide-cyan-500/10">
+                            <tr class="text-center">
+                                <td colspan="5" class="px-6 py-8 text-gray-500">No jobs yet. Run a script to get started!</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Check authentication
+    if (!requireAuth()) {
+        // Will redirect to login
+    }
+    
+    // Set user info
+    const userInfo = TokenManager.getUserInfo();
+    if (userInfo) {
+        document.getElementById('userName').textContent = userInfo.name || 'User';
+        document.getElementById('userEmail').textContent = userInfo.email;
+        document.getElementById('userAvatar').textContent = (userInfo.name || userInfo.email || 'U')[0].toUpperCase();
+    }
+    
+    // Update line numbers
+    const codeEditor = document.getElementById('codeEditor');
+    const lineNumbers = document.getElementById('lineNumbers');
+    
+    function updateLineNumbers() {
+        const lines = codeEditor.value.split('\n').length;
+        lineNumbers.innerHTML = Array.from({length: lines}, (_, i) => `<span>${i + 1}</span>`).join('');
+    }
+    
+    codeEditor.addEventListener('input', updateLineNumbers);
+    codeEditor.addEventListener('scroll', () => {
+        lineNumbers.scrollTop = codeEditor.scrollTop;
+    });
+    updateLineNumbers();
+    
+    // Load example code
+    function loadExampleCode() {
+        codeEditor.value = `# GPU-accelerated Machine Learning Example
+import numpy as np
+import time
+
+print("🚀 Starting GPU computation...")
+start = time.time()
+
+# Create large matrices
+print("Creating 2000x2000 matrices...")
+A = np.random.randn(2000, 2000)
+B = np.random.randn(2000, 2000)
+
+# Matrix multiplication
+print("Performing matrix multiplication...")
+C = np.dot(A, B)
+
+# Statistics
+print(f"\\n📊 Results:")
+print(f"  Matrix shape: {C.shape}")
+print(f"  Mean: {C.mean():.4f}")
+print(f"  Std: {C.std():.4f}")
+print(f"  Max: {C.max():.4f}")
+print(f"  Min: {C.min():.4f}")
+
+elapsed = time.time() - start
+print(f"\\n⏱️ Completed in {elapsed:.2f} seconds")
+print("✅ Job finished successfully!")`;
+        updateLineNumbers();
+        showNotification('Example code loaded!', 'success');
+    }
+    
+    // Clear console
+    function clearConsole() {
+        document.getElementById('consoleOutput').innerHTML = `
+            <div class="text-gray-500">
+                <p>// Console cleared</p>
+            </div>
+        `;
+    }
+    
+    // Scroll to editor
+    function scrollToEditor() {
+        document.getElementById('editor').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Run script
+    async function runScript() {
+        const code = document.getElementById('codeEditor').value;
+        const gpuEnabled = document.getElementById('gpuEnabled').checked;
+        const runButton = document.getElementById('runButton');
+        const runButtonText = document.getElementById('runButtonText');
+        const consoleOutput = document.getElementById('consoleOutput');
+        
+        if (!code.trim()) {
+            showNotification('Please enter some code to run', 'warning');
+            return;
+        }
+        
+        // Update button state
+        runButton.disabled = true;
+        runButtonText.textContent = 'Submitting...';
+        
+        // Update console
+        consoleOutput.innerHTML = `
+            <div class="text-cyan-400">
+                <p>> Submitting job to GPU cluster...</p>
+            </div>
+        `;
+        
+        try {
+            const response = await API.post('/api/jobs/run', {
+                code: code,
+                gpu_enabled: gpuEnabled
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                consoleOutput.innerHTML = `
+                    <div class="space-y-1">
+                        <p class="text-green-400">✓ Job submitted successfully!</p>
+                        <p class="text-gray-400">Job ID: <span class="text-cyan-400">${data.job_id}</span></p>
+                        <p class="text-gray-400">Status: <span class="text-yellow-400">${data.status}</span></p>
+                        <p class="text-gray-500 mt-4">// Job is being processed...</p>
+                        <p class="text-gray-500">// Check the History page for results</p>
+                    </div>
+                `;
+                
+                showNotification('Job submitted successfully!', 'success');
+                
+                // Refresh recent jobs
+                loadRecentJobs();
+            } else {
+                throw new Error(data.message || 'Failed to submit job');
+            }
+        } catch (error) {
+            consoleOutput.innerHTML = `
+                <div class="text-red-400">
+                    <p>✗ Error: ${error.message}</p>
+                </div>
+            `;
+            showNotification(error.message, 'error');
+        } finally {
+            runButton.disabled = false;
+            runButtonText.textContent = 'Run on GPU';
+        }
+    }
+    
+    // Load recent jobs
+    async function loadRecentJobs() {
+        try {
+            const response = await API.get('/api/jobs/history');
+            const data = await response.json();
+            
+            const tableBody = document.getElementById('recentJobsTable');
+            
+            if (data.jobs && data.jobs.length > 0) {
+                // Show only last 5 jobs
+                const recentJobs = data.jobs.slice(0, 5);
+                
+                tableBody.innerHTML = recentJobs.map(job => `
+                    <tr class="hover:bg-cyan-500/5 transition">
+                        <td class="px-6 py-4">
+                            <code class="text-sm text-cyan-400">${job.job_id.slice(0, 8)}...</code>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium badge-${job.status}">
+                                ${job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-sm ${job.gpu_used ? 'text-green-400' : 'text-gray-500'}">
+                                ${job.gpu_used ? 'Yes' : 'No'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-400">
+                            ${formatDate(job.created_at)}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="text-sm text-cyan-400 hover:text-cyan-300 transition">
+                                View
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Failed to load recent jobs:', error);
+        }
+    }
+    
+    // Simulate real-time stats updates
+    function updateStats() {
+        const cpu = Math.floor(Math.random() * 30) + 15;
+        const gpu = Math.floor(Math.random() * 40) + 50;
+        const ram = Math.floor(Math.random() * 20) + 35;
+        
+        document.getElementById('cpuUsage').textContent = cpu + '%';
+        document.getElementById('gpuUsage').textContent = gpu + '%';
+        document.getElementById('ramUsage').textContent = ram + '%';
+    }
+    
+    // Initial load
+    loadRecentJobs();
+    
+    // Update stats every 5 seconds
+    setInterval(updateStats, 5000);
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Erreur {{ code }} - ENSAM Cloud Platform{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-4">
+    <div class="text-center">
+        <div class="text-9xl font-bold text-neon-blue/20 mb-4">{{ code }}</div>
+        <h1 class="text-2xl font-bold mb-2">{{ error }}</h1>
+        <p class="text-gray-400 mb-8">Une erreur s'est produite.</p>
+        <a href="/app" class="px-6 py-3 rounded-lg btn-neon text-white font-semibold inline-block">
+            Retour à l'accueil
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+

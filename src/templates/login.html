@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion - ENSAM Cloud Platform{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <!-- Logo and Title -->
+        <div class="text-center mb-8 fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-neon-blue to-neon-purple mb-4">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold neon-text">ENSAM Cloud Platform</h1>
+            <p class="text-gray-400 mt-2">Plateforme d'exécution Python avec support GPU</p>
+        </div>
+        
+        <!-- Login Card -->
+        <div class="glass-card rounded-2xl p-8 fade-in" style="animation-delay: 0.1s">
+            <h2 class="text-xl font-semibold mb-6 text-center">Connexion</h2>
+            
+            <!-- Error Message -->
+            <div id="error-message" class="hidden mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500 text-red-400 text-sm">
+            </div>
+            
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-300 mb-2">
+                        Adresse email
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email"
+                        required
+                        class="w-full px-4 py-3 rounded-lg bg-dark-bg border border-dark-border text-white placeholder-gray-500 input-neon transition-all"
+                        placeholder="votre@email.com"
+                    >
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-300 mb-2">
+                        Mot de passe
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password"
+                        required
+                        class="w-full px-4 py-3 rounded-lg bg-dark-bg border border-dark-border text-white placeholder-gray-500 input-neon transition-all"
+                        placeholder="••••••••"
+                    >
+                </div>
+                
+                <button 
+                    type="submit"
+                    id="submit-btn"
+                    class="w-full py-3 px-4 rounded-lg btn-neon text-white font-semibold flex items-center justify-center gap-2"
+                >
+                    <span id="btn-text">Se connecter</span>
+                    <div id="btn-spinner" class="hidden spinner w-5 h-5"></div>
+                </button>
+            </form>
+            
+            <!-- Register Link -->
+            <div class="mt-6 text-center">
+                <p class="text-gray-400 text-sm">
+                    Pas encore de compte ?
+                    <a href="/register" class="text-neon-blue hover:underline font-medium">Créer un compte</a>
+                </p>
+            </div>
+            
+            <!-- Demo Credentials -->
+            <div class="mt-4 p-4 rounded-lg bg-dark-bg border border-dark-border">
+                <p class="text-sm text-gray-400 mb-2">Comptes de démonstration :</p>
+                <div class="space-y-1 text-sm">
+                    <p class="text-gray-300">
+                        <span class="text-red-400">Admin:</span> admin@ensam.ma / admin123
+                    </p>
+                    <p class="text-gray-300">
+                        <span class="text-neon-blue">Client:</span> demo@ensam.ma / demo123
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <p class="text-center text-gray-500 text-sm mt-6 fade-in" style="animation-delay: 0.2s">
+            ENSAM Rabat - Cloud Computing 2025 - Groupe 4
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Check if already authenticated
+    if (TokenManager.isAuthenticated()) {
+        const user = TokenManager.getUser();
+        if (user && user.is_admin) {
+            window.location.href = '/admin';
+        } else {
+            window.location.href = '/app';
+        }
+    }
+    
+    // Login form handler
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const submitBtn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+        const errorDiv = document.getElementById('error-message');
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        btnText.textContent = 'Connexion...';
+        btnSpinner.classList.remove('hidden');
+        errorDiv.classList.add('hidden');
+        
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                // Store token and user info
+                TokenManager.setToken(data.token);
+                TokenManager.setUser(data.user);
+                
+                // Redirect based on role
+                if (data.user.is_admin) {
+                    window.location.href = '/admin';
+                } else {
+                    window.location.href = '/app';
+                }
+            } else {
+                // Show error
+                errorDiv.textContent = data.detail || data.message || 'Identifiants incorrects';
+                errorDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            errorDiv.textContent = 'Erreur de connexion au serveur';
+            errorDiv.classList.remove('hidden');
+        } finally {
+            // Reset button state
+            submitBtn.disabled = false;
+            btnText.textContent = 'Se connecter';
+            btnSpinner.classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}
+
+
+

@@ -1,0 +1,494 @@
+{% extends "base.html" %}
+
+{% block title %}Job History - Cloud Platform{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="w-64 glass-strong border-r border-cyan-500/10 flex flex-col">
+        <!-- Logo -->
+        <div class="p-6 border-b border-cyan-500/10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl glass neon-border flex items-center justify-center">
+                    <svg class="w-6 h-6 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-white">Cloud Platform</h1>
+                    <p class="text-xs text-gray-500">GPU Execution</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="/app" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            
+            <a href="/app#editor" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+                <span>Run Script</span>
+            </a>
+            
+            <a href="/history" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-xl text-white">
+                <svg class="w-5 h-5 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>History</span>
+            </a>
+            
+            <div class="pt-4 border-t border-cyan-500/10 mt-4">
+                <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- User Section -->
+        <div class="p-4 border-t border-cyan-500/10">
+            <div class="flex items-center gap-3 p-3 rounded-xl glass">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-neon-cyan to-neon-purple flex items-center justify-center text-white font-semibold" id="userAvatar">
+                    U
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-white truncate" id="userName">User</p>
+                    <p class="text-xs text-gray-500 truncate" id="userEmail">user@cloud.com</p>
+                </div>
+                <button onclick="logout()" class="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="flex-1 overflow-auto">
+        <!-- Top Bar -->
+        <header class="glass-strong border-b border-cyan-500/10 px-8 py-4 sticky top-0 z-10">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Job History</h2>
+                    <p class="text-gray-400 text-sm">View and manage your submitted jobs</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="refreshJobs()" class="flex items-center gap-2 px-4 py-2 rounded-xl glass neon-border text-cyan-400 hover:bg-cyan-500/10 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- History Content -->
+        <div class="p-8 space-y-6">
+            <!-- Stats Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="glass rounded-xl p-4 neon-border">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-white" id="totalJobs">0</p>
+                            <p class="text-xs text-gray-400">Total Jobs</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass rounded-xl p-4 neon-border">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-white" id="finishedJobs">0</p>
+                            <p class="text-xs text-gray-400">Completed</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass rounded-xl p-4 neon-border">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-white" id="runningJobs">0</p>
+                            <p class="text-xs text-gray-400">Running</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass rounded-xl p-4 neon-border">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-white" id="failedJobs">0</p>
+                            <p class="text-xs text-gray-400">Failed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="glass rounded-xl p-4 neon-border">
+                <div class="flex flex-wrap items-center gap-4">
+                    <!-- Search -->
+                    <div class="flex-1 min-w-64">
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <input 
+                                type="text" 
+                                id="searchInput"
+                                placeholder="Search by Job ID..."
+                                class="input-dark w-full pl-10 pr-4 py-2.5 rounded-xl text-white text-sm"
+                            >
+                        </div>
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <select id="statusFilter" class="input-dark px-4 py-2.5 rounded-xl text-white text-sm min-w-40">
+                        <option value="">All Status</option>
+                        <option value="queued">Queued</option>
+                        <option value="running">Running</option>
+                        <option value="finished">Finished</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                    
+                    <!-- GPU Filter -->
+                    <select id="gpuFilter" class="input-dark px-4 py-2.5 rounded-xl text-white text-sm min-w-32">
+                        <option value="">All GPU</option>
+                        <option value="true">GPU Used</option>
+                        <option value="false">CPU Only</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Jobs Table -->
+            <div class="glass rounded-2xl neon-border overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-cyan-500/10 bg-black/20">
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Job ID</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Script</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">GPU</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Submitted</th>
+                                <th class="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobsTableBody" class="divide-y divide-cyan-500/10">
+                            <!-- Jobs will be loaded here -->
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <svg class="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        </svg>
+                                        <p>No jobs found</p>
+                                        <a href="/app" class="text-cyan-400 hover:text-cyan-300 text-sm">Run your first script →</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Job Details Modal -->
+<div id="jobModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-xl glass-strong border-l border-cyan-500/10 overflow-auto animate-slide-in">
+        <div class="p-6 border-b border-cyan-500/10 flex items-center justify-between sticky top-0 glass-strong z-10">
+            <h3 class="text-xl font-bold text-white">Job Details</h3>
+            <button onclick="closeModal()" class="p-2 rounded-lg hover:bg-gray-500/20 text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="modalContent" class="p-6">
+            <!-- Content will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes slide-in {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+    }
+    .animate-slide-in {
+        animation: slide-in 0.3s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Check authentication
+    if (!requireAuth()) {
+        // Will redirect to login
+    }
+    
+    // Set user info
+    const userInfo = TokenManager.getUserInfo();
+    if (userInfo) {
+        document.getElementById('userName').textContent = userInfo.name || 'User';
+        document.getElementById('userEmail').textContent = userInfo.email;
+        document.getElementById('userAvatar').textContent = (userInfo.name || userInfo.email || 'U')[0].toUpperCase();
+    }
+    
+    // Store all jobs for filtering
+    let allJobs = [];
+    
+    // Load jobs
+    async function loadJobs() {
+        try {
+            const response = await API.get('/api/jobs/history');
+            const data = await response.json();
+            
+            if (data.success && data.jobs) {
+                allJobs = data.jobs;
+                updateStats(data.jobs);
+                renderJobs(data.jobs);
+            }
+        } catch (error) {
+            console.error('Failed to load jobs:', error);
+            showNotification('Failed to load jobs', 'error');
+        }
+    }
+    
+    // Update stats
+    function updateStats(jobs) {
+        document.getElementById('totalJobs').textContent = jobs.length;
+        document.getElementById('finishedJobs').textContent = jobs.filter(j => j.status === 'finished').length;
+        document.getElementById('runningJobs').textContent = jobs.filter(j => j.status === 'running' || j.status === 'queued').length;
+        document.getElementById('failedJobs').textContent = jobs.filter(j => j.status === 'failed').length;
+    }
+    
+    // Render jobs table
+    function renderJobs(jobs) {
+        const tableBody = document.getElementById('jobsTableBody');
+        
+        if (jobs.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                        <div class="flex flex-col items-center gap-3">
+                            <svg class="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            <p>No jobs found</p>
+                            <a href="/app" class="text-cyan-400 hover:text-cyan-300 text-sm">Run your first script →</a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tableBody.innerHTML = jobs.map(job => `
+            <tr class="hover:bg-cyan-500/5 transition">
+                <td class="px-6 py-4">
+                    <code class="text-sm text-cyan-400 cursor-pointer hover:text-cyan-300" onclick="viewJob('${job.job_id}')">${job.job_id.slice(0, 12)}...</code>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="text-sm text-gray-300">${job.script_name || 'script.py'}</span>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="px-3 py-1 rounded-full text-xs font-medium badge-${job.status}">
+                        ${job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                    </span>
+                </td>
+                <td class="px-6 py-4">
+                    ${job.gpu_used 
+                        ? '<span class="flex items-center gap-1 text-sm text-green-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Yes</span>'
+                        : '<span class="text-sm text-gray-500">No</span>'
+                    }
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-400">
+                    ${formatDate(job.created_at)}
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <button onclick="viewJob('${job.job_id}')" class="text-sm text-cyan-400 hover:text-cyan-300 transition px-3 py-1 rounded-lg hover:bg-cyan-500/10">
+                        View Output
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    // Filter jobs
+    function filterJobs() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+        const gpu = document.getElementById('gpuFilter').value;
+        
+        let filtered = allJobs;
+        
+        if (search) {
+            filtered = filtered.filter(j => j.job_id.toLowerCase().includes(search));
+        }
+        
+        if (status) {
+            filtered = filtered.filter(j => j.status === status);
+        }
+        
+        if (gpu) {
+            filtered = filtered.filter(j => String(j.gpu_used) === gpu);
+        }
+        
+        renderJobs(filtered);
+    }
+    
+    // Refresh jobs
+    function refreshJobs() {
+        loadJobs();
+        showNotification('Jobs refreshed', 'success');
+    }
+    
+    // View job details
+    function viewJob(jobId) {
+        const job = allJobs.find(j => j.job_id === jobId);
+        if (!job) return;
+        
+        const modal = document.getElementById('jobModal');
+        const content = document.getElementById('modalContent');
+        
+        content.innerHTML = `
+            <div class="space-y-6">
+                <!-- Job Info -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">Job ID</span>
+                        <code class="text-cyan-400 text-sm">${job.job_id}</code>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">Status</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-medium badge-${job.status}">
+                            ${job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">GPU Used</span>
+                        <span class="${job.gpu_used ? 'text-green-400' : 'text-gray-500'}">${job.gpu_used ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">Submitted</span>
+                        <span class="text-white">${formatDate(job.created_at)}</span>
+                    </div>
+                    ${job.finished_at ? `
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-400">Finished</span>
+                        <span class="text-white">${formatDate(job.finished_at)}</span>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                <!-- Output Section -->
+                <div>
+                    <h4 class="text-sm font-medium text-gray-400 mb-3">Console Output</h4>
+                    <div class="glass rounded-xl p-4 font-mono text-sm overflow-auto max-h-64">
+                        ${job.output 
+                            ? `<pre class="text-green-400 whitespace-pre-wrap">${job.output}</pre>`
+                            : '<p class="text-gray-500">No output available yet...</p>'
+                        }
+                        ${job.error 
+                            ? `<pre class="text-red-400 whitespace-pre-wrap mt-2">${job.error}</pre>`
+                            : ''
+                        }
+                    </div>
+                </div>
+                
+                <!-- Result Files -->
+                <div>
+                    <h4 class="text-sm font-medium text-gray-400 mb-3">Result Files</h4>
+                    <div class="glass rounded-xl p-4">
+                        <div class="flex items-center gap-3 text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span class="text-sm">No result files</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Metrics -->
+                <div>
+                    <h4 class="text-sm font-medium text-gray-400 mb-3">Resource Metrics</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="glass rounded-xl p-3">
+                            <p class="text-xs text-gray-500">CPU Time</p>
+                            <p class="text-lg font-semibold text-white">0.42s</p>
+                        </div>
+                        <div class="glass rounded-xl p-3">
+                            <p class="text-xs text-gray-500">GPU Time</p>
+                            <p class="text-lg font-semibold text-white">${job.gpu_used ? '1.23s' : 'N/A'}</p>
+                        </div>
+                        <div class="glass rounded-xl p-3">
+                            <p class="text-xs text-gray-500">Peak RAM</p>
+                            <p class="text-lg font-semibold text-white">256 MB</p>
+                        </div>
+                        <div class="glass rounded-xl p-3">
+                            <p class="text-xs text-gray-500">Duration</p>
+                            <p class="text-lg font-semibold text-white">2.1s</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modal.classList.remove('hidden');
+    }
+    
+    // Close modal
+    function closeModal() {
+        document.getElementById('jobModal').classList.add('hidden');
+    }
+    
+    // Close modal on escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+    
+    // Add filter event listeners
+    document.getElementById('searchInput').addEventListener('input', filterJobs);
+    document.getElementById('statusFilter').addEventListener('change', filterJobs);
+    document.getElementById('gpuFilter').addEventListener('change', filterJobs);
+    
+    // Initial load
+    loadJobs();
+</script>
+{% endblock %}

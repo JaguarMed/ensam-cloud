@@ -1,0 +1,1207 @@
+{% extends "base.html" %}
+
+{% block title %}Administration - ENSAM Cloud Platform{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col">
+    <!-- Navigation Bar -->
+    <nav class="glass-card border-b border-dark-border px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold">Admin Console</span>
+                    <span class="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-400 font-medium">ADMIN</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Live indicator -->
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/20">
+                    <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                    <span class="text-sm font-medium text-green-400">Live</span>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="flex items-center gap-3">
+                    <span id="user-name" class="text-sm text-gray-400"></span>
+                    <button onclick="logout()" class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="flex items-center gap-2 mt-4 overflow-x-auto">
+            <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" 
+                    class="admin-tab px-4 py-2 rounded-lg bg-red-500/20 text-red-400 font-medium whitespace-nowrap">
+                📊 Dashboard
+            </button>
+            <button onclick="switchAdminTab('users')" id="tab-users" 
+                    class="admin-tab px-4 py-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors whitespace-nowrap">
+                👥 Utilisateurs
+            </button>
+            <button onclick="switchAdminTab('processes')" id="tab-processes" 
+                    class="admin-tab px-4 py-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors whitespace-nowrap">
+                ⚙️ Processus
+            </button>
+            <button onclick="switchAdminTab('monitoring')" id="tab-monitoring" 
+                    class="admin-tab px-4 py-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors whitespace-nowrap">
+                📈 Monitoring
+            </button>
+            <button onclick="switchAdminTab('machines')" id="tab-machines" 
+                    class="admin-tab px-4 py-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors whitespace-nowrap">
+                🖥️ Machines
+            </button>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="flex-1 p-6">
+        
+        <!-- ==================== DASHBOARD TAB ==================== -->
+        <div id="panel-dashboard" class="admin-panel">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Utilisateurs</p>
+                            <p id="stat-users" class="text-3xl font-bold mt-1">-</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Total Jobs</p>
+                            <p id="stat-jobs" class="text-3xl font-bold mt-1">-</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Jobs en cours</p>
+                            <p id="stat-running" class="text-3xl font-bold mt-1 text-yellow-400">-</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-yellow-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Taux de succès</p>
+                            <p id="stat-success-rate" class="text-3xl font-bold mt-1 text-green-400">-</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Jobs per day chart -->
+                <div class="glass-card rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">📊 Jobs des 7 derniers jours</h3>
+                    <div id="jobs-chart" class="h-48">
+                        <div class="flex items-end justify-between h-full gap-2" id="jobs-bars"></div>
+                    </div>
+                    <div id="jobs-chart-labels" class="flex justify-between mt-2 text-xs text-gray-400"></div>
+                </div>
+                
+                <!-- Status distribution -->
+                <div class="glass-card rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">📈 Distribution des statuts</h3>
+                    <div class="flex items-center justify-center h-48">
+                        <div class="grid grid-cols-2 gap-4 w-full">
+                            <div class="text-center p-4 bg-green-500/10 rounded-lg">
+                                <div id="chart-success" class="text-3xl font-bold text-green-400">-</div>
+                                <div class="text-sm text-gray-400 mt-1">Succès</div>
+                            </div>
+                            <div class="text-center p-4 bg-red-500/10 rounded-lg">
+                                <div id="chart-failed" class="text-3xl font-bold text-red-400">-</div>
+                                <div class="text-sm text-gray-400 mt-1">Échecs</div>
+                            </div>
+                            <div class="text-center p-4 bg-yellow-500/10 rounded-lg">
+                                <div id="chart-running" class="text-3xl font-bold text-yellow-400">-</div>
+                                <div class="text-sm text-gray-400 mt-1">En cours</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-500/10 rounded-lg">
+                                <div id="chart-cancelled" class="text-3xl font-bold text-gray-400">-</div>
+                                <div class="text-sm text-gray-400 mt-1">Annulés</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="glass-card rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-4">🕐 Activité récente</h3>
+                <div id="recent-activity" class="space-y-3 max-h-64 overflow-y-auto">
+                    <p class="text-gray-500 text-center py-4">Chargement...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== USERS TAB ==================== -->
+        <div id="panel-users" class="admin-panel hidden">
+            <div class="glass-card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">👥 Gestion des utilisateurs</h3>
+                    <button onclick="openAddUserModal()" class="px-4 py-2 rounded-lg bg-neon-blue/20 text-neon-blue text-sm font-medium hover:bg-neon-blue/30 transition-colors">
+                        + Ajouter un utilisateur
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-400 text-sm border-b border-dark-border">
+                                <th class="pb-3 font-medium">ID</th>
+                                <th class="pb-3 font-medium">Email</th>
+                                <th class="pb-3 font-medium">Nom</th>
+                                <th class="pb-3 font-medium">Rôle</th>
+                                <th class="pb-3 font-medium">Statut</th>
+                                <th class="pb-3 font-medium">Jobs</th>
+                                <th class="pb-3 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table" class="text-sm">
+                            <tr>
+                                <td colspan="7" class="py-8 text-center text-gray-500">Chargement...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== PROCESSES TAB ==================== -->
+        <div id="panel-processes" class="admin-panel hidden">
+            <div class="glass-card rounded-xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">⚙️ Processus en cours</h3>
+                    <div class="flex items-center gap-2">
+                        <button onclick="refreshProcesses()" class="px-4 py-2 rounded-lg bg-neon-blue/20 text-neon-blue text-sm font-medium hover:bg-neon-blue/30 transition-colors">
+                            🔄 Actualiser
+                        </button>
+                        <button onclick="killAllProcesses()" class="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/30 transition-colors">
+                            ⛔ Arrêter tout
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-400 text-sm border-b border-dark-border">
+                                <th class="pb-3 font-medium">ID</th>
+                                <th class="pb-3 font-medium">Utilisateur</th>
+                                <th class="pb-3 font-medium">Script</th>
+                                <th class="pb-3 font-medium">Mode</th>
+                                <th class="pb-3 font-medium">Durée</th>
+                                <th class="pb-3 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="processes-table" class="text-sm">
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-gray-500">Chargement...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- All Jobs History -->
+            <div class="glass-card rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-4">📋 Historique complet</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-400 text-sm border-b border-dark-border">
+                                <th class="pb-3 font-medium">ID</th>
+                                <th class="pb-3 font-medium">Utilisateur</th>
+                                <th class="pb-3 font-medium">Statut</th>
+                                <th class="pb-3 font-medium">Mode</th>
+                                <th class="pb-3 font-medium">Durée</th>
+                                <th class="pb-3 font-medium">Date</th>
+                                <th class="pb-3 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobs-history-table" class="text-sm">
+                            <tr>
+                                <td colspan="7" class="py-8 text-center text-gray-500">Chargement...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== MONITORING TAB ==================== -->
+        <div id="panel-monitoring" class="admin-panel hidden">
+            <!-- Real-time metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="glass-card rounded-xl p-6">
+                    <h4 class="text-sm text-gray-400 mb-2">CPU Usage</h4>
+                    <div class="flex items-end gap-2">
+                        <span id="metric-cpu" class="text-3xl font-bold text-neon-blue">-</span>
+                        <span class="text-gray-400">%</span>
+                    </div>
+                    <div class="mt-3 h-2 bg-dark-bg rounded-full overflow-hidden">
+                        <div id="metric-cpu-bar" class="h-full bg-neon-blue transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl p-6">
+                    <h4 class="text-sm text-gray-400 mb-2">Mémoire RAM</h4>
+                    <div class="flex items-end gap-2">
+                        <span id="metric-ram" class="text-3xl font-bold text-neon-purple">-</span>
+                        <span class="text-gray-400">%</span>
+                    </div>
+                    <div class="mt-3 h-2 bg-dark-bg rounded-full overflow-hidden">
+                        <div id="metric-ram-bar" class="h-full bg-neon-purple transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl p-6">
+                    <h4 class="text-sm text-gray-400 mb-2">GPU Usage</h4>
+                    <div class="flex items-end gap-2">
+                        <span id="metric-gpu" class="text-3xl font-bold text-green-400">-</span>
+                        <span class="text-gray-400">%</span>
+                    </div>
+                    <div class="mt-3 h-2 bg-dark-bg rounded-full overflow-hidden">
+                        <div id="metric-gpu-bar" class="h-full bg-green-400 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl p-6">
+                    <h4 class="text-sm text-gray-400 mb-2">Containers actifs</h4>
+                    <div class="flex items-end gap-2">
+                        <span id="metric-containers" class="text-3xl font-bold text-yellow-400">-</span>
+                    </div>
+                    <p class="mt-3 text-xs text-gray-400">Docker containers en cours</p>
+                </div>
+            </div>
+            
+            <!-- Resource Usage Chart -->
+            <div class="glass-card rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">📊 Utilisation des ressources (24h)</h3>
+                <div class="h-64 relative">
+                    <!-- Y-axis labels -->
+                    <div class="absolute left-0 top-0 bottom-8 w-10 flex flex-col justify-between text-xs text-gray-400">
+                        <span>100%</span>
+                        <span>75%</span>
+                        <span>50%</span>
+                        <span>25%</span>
+                        <span>0%</span>
+                    </div>
+                    <!-- Chart area -->
+                    <div class="ml-12 h-full">
+                        <div id="resource-chart" class="h-56 flex items-end gap-1 border-l border-b border-dark-border relative">
+                            <!-- Bars will be inserted here -->
+                        </div>
+                        <div id="resource-chart-labels" class="flex justify-between mt-2 text-xs text-gray-400"></div>
+                    </div>
+                </div>
+                <!-- Legend -->
+                <div class="flex justify-center gap-6 mt-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded bg-neon-blue"></div>
+                        <span class="text-sm text-gray-400">CPU</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded bg-neon-purple"></div>
+                        <span class="text-sm text-gray-400">RAM</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded bg-green-400"></div>
+                        <span class="text-sm text-gray-400">GPU</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Jobs per mode -->
+                <div class="glass-card rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">🔄 Jobs par mode d'exécution</h3>
+                    <div class="flex items-center justify-center h-48">
+                        <div class="flex gap-8">
+                            <div class="text-center">
+                                <div class="w-24 h-24 rounded-full bg-blue-500/20 flex items-center justify-center mb-2">
+                                    <span id="mode-cpu" class="text-2xl font-bold text-blue-400">-</span>
+                                </div>
+                                <span class="text-sm text-gray-400">CPU</span>
+                            </div>
+                            <div class="text-center">
+                                <div class="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center mb-2">
+                                    <span id="mode-gpu" class="text-2xl font-bold text-green-400">-</span>
+                                </div>
+                                <span class="text-sm text-gray-400">GPU</span>
+                            </div>
+                            <div class="text-center">
+                                <div class="w-24 h-24 rounded-full bg-purple-500/20 flex items-center justify-center mb-2">
+                                    <span id="mode-auto" class="text-2xl font-bold text-purple-400">-</span>
+                                </div>
+                                <span class="text-sm text-gray-400">Auto</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Top users -->
+                <div class="glass-card rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">🏆 Top utilisateurs</h3>
+                    <div id="top-users-chart" class="space-y-3">
+                        <p class="text-gray-500 text-center py-4">Chargement...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Avg Time Chart -->
+            <div class="glass-card rounded-xl p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">⏱️ Temps d'exécution moyen (7 jours)</h3>
+                <div id="avg-time-chart" class="h-48">
+                    <div class="flex items-end justify-between h-full gap-2" id="time-bars"></div>
+                </div>
+                <div id="time-chart-labels" class="flex justify-between mt-2 text-xs text-gray-400"></div>
+            </div>
+            
+            <!-- Prometheus Link -->
+            <div class="glass-card rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-4">🔗 Intégration Prometheus</h3>
+                <p class="text-gray-400 mb-4">Les métriques sont exposées au format Prometheus pour intégration avec Grafana.</p>
+                <div class="flex gap-4">
+                    <a href="/metrics" target="_blank" class="px-4 py-2 rounded-lg bg-neon-blue/20 text-neon-blue font-medium hover:bg-neon-blue/30 transition-colors">
+                        Voir les métriques brutes
+                    </a>
+                    <a href="/api/docs" target="_blank" class="px-4 py-2 rounded-lg border border-dark-border text-gray-400 hover:text-white hover:border-gray-500 transition-colors">
+                        Documentation API
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== MACHINES TAB ==================== -->
+        <div id="panel-machines" class="admin-panel hidden">
+            <div class="glass-card rounded-xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">🖥️ Machines connectées</h3>
+                    <button onclick="refreshMachines()" class="px-4 py-2 rounded-lg bg-neon-blue/20 text-neon-blue text-sm font-medium hover:bg-neon-blue/30 transition-colors">
+                        🔄 Actualiser
+                    </button>
+                </div>
+                
+                <div id="machines-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                </div>
+            </div>
+            
+            <!-- Docker Images -->
+            <div class="glass-card rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-4">🐳 Images Docker</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-dark-bg rounded-lg p-4 border border-dark-border">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                <span class="text-xl">🐍</span>
+                            </div>
+                            <div>
+                                <p class="font-medium">Python CPU</p>
+                                <p class="text-xs text-gray-400 font-mono">python:3.11-slim</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-400">Pour exécution CPU standard</p>
+                    </div>
+                    
+                    <div class="bg-dark-bg rounded-lg p-4 border border-dark-border">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                <span class="text-xl">🎮</span>
+                            </div>
+                            <div>
+                                <p class="font-medium">NVIDIA CUDA</p>
+                                <p class="text-xs text-gray-400 font-mono">nvidia/cuda:12.0.0-runtime</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-400">Pour exécution GPU avec CUDA</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="add-user-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="glass-card rounded-xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-semibold mb-4">Ajouter un utilisateur</h3>
+        
+        <form id="add-user-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                <input type="email" id="new-user-email" required
+                       class="w-full px-4 py-3 rounded-lg bg-dark-bg border border-dark-border text-white input-neon">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Nom complet</label>
+                <input type="text" id="new-user-name"
+                       class="w-full px-4 py-3 rounded-lg bg-dark-bg border border-dark-border text-white input-neon">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Mot de passe</label>
+                <input type="password" id="new-user-password" required
+                       class="w-full px-4 py-3 rounded-lg bg-dark-bg border border-dark-border text-white input-neon">
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" id="new-user-admin" class="rounded">
+                <label for="new-user-admin" class="text-sm text-gray-300">Administrateur</label>
+            </div>
+            
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" onclick="closeAddUserModal()" 
+                        class="px-4 py-2 rounded-lg border border-dark-border text-gray-400 hover:text-white">
+                    Annuler
+                </button>
+                <button type="submit" class="px-4 py-2 rounded-lg btn-neon text-white font-medium">
+                    Créer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="edit-user-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="glass-card rounded-xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-semibold mb-4">Modifier l'utilisateur</h3>
+        
+        <form id="edit-user-form" class="space-y-4">
+            <input type="hidden" id="edit-user-id">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                <input type="email" id="edit-user-email" required
+                       class="w-full px-4 py-3 rounded-lg bg-dark-bg border border-dark-border text-white input-neon">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Nom complet</label>
+                <input type="text" id="edit-user-name"
+                       class="w-full px-4 py-3 rounded-lg bg-dark-bg border border-dark-border text-white input-neon">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Nouveau mot de passe (laisser vide pour ne pas changer)</label>
+                <input type="password" id="edit-user-password"
+                       class="w-full px-4 py-3 rounded-lg bg-dark-bg border border-dark-border text-white input-neon">
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="edit-user-admin" class="rounded">
+                    <label for="edit-user-admin" class="text-sm text-gray-300">Administrateur</label>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="edit-user-active" class="rounded">
+                    <label for="edit-user-active" class="text-sm text-gray-300">Actif</label>
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" onclick="closeEditUserModal()" 
+                        class="px-4 py-2 rounded-lg border border-dark-border text-gray-400 hover:text-white">
+                    Annuler
+                </button>
+                <button type="submit" class="px-4 py-2 rounded-lg btn-neon text-white font-medium">
+                    Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-user-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="glass-card rounded-xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-semibold mb-4 text-red-400">⚠️ Confirmer la suppression</h3>
+        <p class="text-gray-300 mb-4">Êtes-vous sûr de vouloir supprimer l'utilisateur <strong id="delete-user-email"></strong> ?</p>
+        <p class="text-sm text-gray-400 mb-6">Cette action supprimera également tous ses jobs et ne peut pas être annulée.</p>
+        
+        <input type="hidden" id="delete-user-id">
+        
+        <div class="flex justify-end gap-3">
+            <button onclick="closeDeleteUserModal()" 
+                    class="px-4 py-2 rounded-lg border border-dark-border text-gray-400 hover:text-white">
+                Annuler
+            </button>
+            <button onclick="confirmDeleteUser()" class="px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600">
+                Supprimer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Job Details Modal -->
+<div id="job-details-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="glass-card rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold">Détails du Job #<span id="modal-job-id"></span></h3>
+            <button onclick="closeJobDetailsModal()" class="text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="modal-job-content"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Check authentication and admin role
+    if (!TokenManager.isAuthenticated()) {
+        window.location.href = '/login';
+    }
+    
+    const user = TokenManager.getUser();
+    if (!user || !user.is_admin) {
+        showToast('Accès refusé - Administrateur requis', 'error');
+        window.location.href = '/app';
+    }
+    
+    document.getElementById('user-name').textContent = user.full_name || user.email;
+    
+    // Tab switching
+    function switchAdminTab(tab) {
+        document.querySelectorAll('.admin-tab').forEach(btn => {
+            btn.classList.remove('bg-red-500/20', 'text-red-400');
+            btn.classList.add('text-gray-400');
+        });
+        document.getElementById(`tab-${tab}`).classList.add('bg-red-500/20', 'text-red-400');
+        document.getElementById(`tab-${tab}`).classList.remove('text-gray-400');
+        
+        document.querySelectorAll('.admin-panel').forEach(panel => {
+            panel.classList.add('hidden');
+        });
+        document.getElementById(`panel-${tab}`).classList.remove('hidden');
+        
+        // Load data
+        if (tab === 'dashboard') loadDashboard();
+        if (tab === 'users') loadUsers();
+        if (tab === 'processes') loadProcesses();
+        if (tab === 'monitoring') loadMonitoring();
+        if (tab === 'machines') loadMachines();
+    }
+    
+    // ==================== DASHBOARD ====================
+    async function loadDashboard() {
+        try {
+            // Load stats
+            const statsResponse = await API.get('/api/admin/stats');
+            const stats = await statsResponse.json();
+            
+            if (stats.success) {
+                document.getElementById('stat-users').textContent = stats.total_users;
+                document.getElementById('stat-jobs').textContent = stats.total_jobs;
+                document.getElementById('stat-running').textContent = stats.running_jobs;
+                document.getElementById('stat-success-rate').textContent = stats.success_rate + '%';
+                document.getElementById('chart-success').textContent = stats.success_jobs;
+                document.getElementById('chart-failed').textContent = stats.failed_jobs;
+                document.getElementById('chart-running').textContent = stats.running_jobs;
+            }
+            
+            // Load charts data
+            const chartsResponse = await API.get('/api/admin/monitoring/charts?days=7');
+            const chartsData = await chartsResponse.json();
+            
+            if (chartsData.success) {
+                // Jobs per day bar chart
+                const maxJobs = Math.max(...chartsData.jobs_per_day.map(d => d.total), 1);
+                const barsContainer = document.getElementById('jobs-bars');
+                const labelsContainer = document.getElementById('jobs-chart-labels');
+                
+                barsContainer.innerHTML = chartsData.jobs_per_day.map(d => {
+                    const height = (d.total / maxJobs) * 100;
+                    const successHeight = d.total > 0 ? (d.success / d.total) * height : 0;
+                    return `
+                        <div class="flex-1 flex flex-col justify-end items-center gap-1">
+                            <span class="text-xs text-gray-400">${d.total}</span>
+                            <div class="w-full bg-red-500/50 rounded-t" style="height: ${height - successHeight}%"></div>
+                            <div class="w-full bg-green-500 rounded-t" style="height: ${successHeight}%"></div>
+                        </div>
+                    `;
+                }).join('');
+                
+                labelsContainer.innerHTML = chartsData.jobs_per_day.map(d => `<span>${d.label}</span>`).join('');
+                
+                // Status distribution
+                document.getElementById('chart-cancelled').textContent = chartsData.status_distribution.cancelled || 0;
+            }
+            
+            // Load recent activity
+            const jobsResponse = await API.get('/api/admin/jobs?per_page=5');
+            const jobsData = await jobsResponse.json();
+            
+            const activityDiv = document.getElementById('recent-activity');
+            if (jobsData.jobs && jobsData.jobs.length > 0) {
+                activityDiv.innerHTML = jobsData.jobs.map(job => `
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-dark-bg">
+                        <div class="w-2 h-2 rounded-full ${getStatusColor(job.status)}"></div>
+                        <div class="flex-1">
+                            <p class="text-sm">
+                                <span class="text-gray-400">${job.user_email}</span> - Job #${job.id}
+                            </p>
+                            <p class="text-xs text-gray-500">${new Date(job.created_at).toLocaleString('fr-FR')}</p>
+                        </div>
+                        <span class="px-2 py-1 rounded-full text-xs badge-${job.status}">${job.status}</span>
+                    </div>
+                `).join('');
+            } else {
+                activityDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Aucune activité récente</p>';
+            }
+            
+        } catch (error) {
+            console.error('Failed to load dashboard:', error);
+        }
+    }
+    
+    // ==================== USERS ====================
+    async function loadUsers() {
+        try {
+            const response = await API.get('/api/admin/users');
+            const data = await response.json();
+            
+            const tbody = document.getElementById('users-table');
+            
+            if (data.users && data.users.length > 0) {
+                tbody.innerHTML = data.users.map(u => `
+                    <tr class="border-b border-dark-border/50 hover:bg-white/5">
+                        <td class="py-3 font-mono text-gray-400">#${u.id}</td>
+                        <td class="py-3">${u.email}</td>
+                        <td class="py-3">${u.full_name || '-'}</td>
+                        <td class="py-3">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${u.is_admin ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}">
+                                ${u.is_admin ? 'Admin' : 'User'}
+                            </span>
+                        </td>
+                        <td class="py-3">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${u.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}">
+                                ${u.is_active ? 'Actif' : 'Inactif'}
+                            </span>
+                        </td>
+                        <td class="py-3">${u.job_count || 0}</td>
+                        <td class="py-3">
+                            <button onclick="openEditUserModal(${u.id}, '${u.email}', '${u.full_name || ''}', ${u.is_admin}, ${u.is_active})" 
+                                    class="text-sm text-neon-blue hover:underline mr-2">
+                                ✏️ Modifier
+                            </button>
+                            <button onclick="openDeleteUserModal(${u.id}, '${u.email}')" 
+                                    class="text-sm text-red-400 hover:underline">
+                                🗑️ Supprimer
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-500">Aucun utilisateur</td></tr>';
+            }
+        } catch (error) {
+            console.error('Failed to load users:', error);
+        }
+    }
+    
+    // Edit User Modal
+    function openEditUserModal(id, email, name, isAdmin, isActive) {
+        document.getElementById('edit-user-id').value = id;
+        document.getElementById('edit-user-email').value = email;
+        document.getElementById('edit-user-name').value = name;
+        document.getElementById('edit-user-password').value = '';
+        document.getElementById('edit-user-admin').checked = isAdmin;
+        document.getElementById('edit-user-active').checked = isActive;
+        document.getElementById('edit-user-modal').classList.remove('hidden');
+    }
+    
+    function closeEditUserModal() {
+        document.getElementById('edit-user-modal').classList.add('hidden');
+    }
+    
+    document.getElementById('edit-user-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('edit-user-id').value;
+        const email = document.getElementById('edit-user-email').value;
+        const fullName = document.getElementById('edit-user-name').value;
+        const password = document.getElementById('edit-user-password').value;
+        const isAdmin = document.getElementById('edit-user-admin').checked;
+        const isActive = document.getElementById('edit-user-active').checked;
+        
+        try {
+            const params = new URLSearchParams();
+            params.append('email', email);
+            params.append('full_name', fullName);
+            params.append('is_admin', isAdmin);
+            params.append('is_active', isActive);
+            if (password) params.append('password', password);
+            
+            const response = await API.put(`/api/admin/users/${id}?${params.toString()}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Utilisateur modifié', 'success');
+                closeEditUserModal();
+                loadUsers();
+            } else {
+                showToast(data.detail || data.message || 'Erreur', 'error');
+            }
+        } catch (error) {
+            showToast('Erreur', 'error');
+        }
+    });
+    
+    // Delete User Modal
+    function openDeleteUserModal(id, email) {
+        document.getElementById('delete-user-id').value = id;
+        document.getElementById('delete-user-email').textContent = email;
+        document.getElementById('delete-user-modal').classList.remove('hidden');
+    }
+    
+    function closeDeleteUserModal() {
+        document.getElementById('delete-user-modal').classList.add('hidden');
+    }
+    
+    async function confirmDeleteUser() {
+        const id = document.getElementById('delete-user-id').value;
+        
+        try {
+            const response = await API.delete(`/api/admin/users/${id}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Utilisateur supprimé', 'success');
+                closeDeleteUserModal();
+                loadUsers();
+                loadDashboard();
+            } else {
+                showToast(data.detail || data.message || 'Erreur', 'error');
+            }
+        } catch (error) {
+            showToast('Erreur', 'error');
+        }
+    }
+    
+    // Add User Modal
+    function openAddUserModal() {
+        document.getElementById('add-user-modal').classList.remove('hidden');
+    }
+    
+    function closeAddUserModal() {
+        document.getElementById('add-user-modal').classList.add('hidden');
+        document.getElementById('add-user-form').reset();
+    }
+    
+    document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('new-user-email').value;
+        const fullName = document.getElementById('new-user-name').value;
+        const password = document.getElementById('new-user-password').value;
+        const isAdmin = document.getElementById('new-user-admin').checked;
+        
+        try {
+            const response = await API.post('/api/admin/users', {
+                email,
+                full_name: fullName,
+                password,
+                is_admin: isAdmin
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Utilisateur créé', 'success');
+                closeAddUserModal();
+                loadUsers();
+                loadDashboard();
+            } else {
+                showToast(data.detail || data.message || 'Erreur', 'error');
+            }
+        } catch (error) {
+            showToast('Erreur', 'error');
+        }
+    });
+    
+    // ==================== PROCESSES ====================
+    async function loadProcesses() {
+        try {
+            // Load running jobs
+            const runningResponse = await API.get('/api/admin/jobs?status_filter=running&per_page=50');
+            const runningData = await runningResponse.json();
+            
+            const processesTable = document.getElementById('processes-table');
+            
+            if (runningData.jobs && runningData.jobs.length > 0) {
+                processesTable.innerHTML = runningData.jobs.map(job => `
+                    <tr class="border-b border-dark-border/50 hover:bg-white/5">
+                        <td class="py-3 font-mono text-neon-blue">#${job.id}</td>
+                        <td class="py-3">${job.user_email}</td>
+                        <td class="py-3">${job.script_name}</td>
+                        <td class="py-3 uppercase text-xs">${job.execution_mode}</td>
+                        <td class="py-3">${getRunningTime(job.started_at)}</td>
+                        <td class="py-3">
+                            <button onclick="killProcess(${job.id})" class="px-3 py-1 rounded bg-red-500/20 text-red-400 text-xs hover:bg-red-500/30">
+                                ⛔ Arrêter
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                processesTable.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-gray-500">Aucun processus en cours</td></tr>';
+            }
+            
+            // Load job history
+            const historyResponse = await API.get('/api/admin/jobs?per_page=20');
+            const historyData = await historyResponse.json();
+            
+            const historyTable = document.getElementById('jobs-history-table');
+            
+            if (historyData.jobs && historyData.jobs.length > 0) {
+                historyTable.innerHTML = historyData.jobs.map(job => `
+                    <tr class="border-b border-dark-border/50 hover:bg-white/5">
+                        <td class="py-3 font-mono text-neon-blue">#${job.id}</td>
+                        <td class="py-3">${job.user_email}</td>
+                        <td class="py-3">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium badge-${job.status}">${job.status}</span>
+                        </td>
+                        <td class="py-3 uppercase text-xs">${job.execution_mode}</td>
+                        <td class="py-3">${job.duration_seconds ? job.duration_seconds.toFixed(2) + 's' : '-'}</td>
+                        <td class="py-3 text-gray-400">${new Date(job.created_at).toLocaleString('fr-FR')}</td>
+                        <td class="py-3">
+                            <button onclick="viewJobDetails(${job.id})" class="text-neon-blue hover:underline text-sm">
+                                Détails
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                historyTable.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-500">Aucun job</td></tr>';
+            }
+            
+        } catch (error) {
+            console.error('Failed to load processes:', error);
+        }
+    }
+    
+    function refreshProcesses() {
+        loadProcesses();
+        showToast('Processus actualisés', 'success');
+    }
+    
+    async function killProcess(jobId) {
+        if (!confirm(`Voulez-vous vraiment arrêter le job #${jobId} ?`)) return;
+        
+        try {
+            const response = await API.post(`/api/jobs/${jobId}/cancel`, {});
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast(`Job #${jobId} arrêté`, 'success');
+                loadProcesses();
+            } else {
+                showToast(data.message || 'Erreur', 'error');
+            }
+        } catch (error) {
+            showToast('Erreur', 'error');
+        }
+    }
+    
+    async function killAllProcesses() {
+        if (!confirm('Voulez-vous vraiment arrêter TOUS les processus en cours ?')) return;
+        
+        try {
+            const response = await API.get('/api/admin/jobs?status_filter=running&per_page=100');
+            const data = await response.json();
+            
+            if (data.jobs && data.jobs.length > 0) {
+                for (const job of data.jobs) {
+                    await API.post(`/api/jobs/${job.id}/cancel`, {});
+                }
+                showToast(`${data.jobs.length} processus arrêtés`, 'success');
+                loadProcesses();
+            } else {
+                showToast('Aucun processus en cours', 'info');
+            }
+        } catch (error) {
+            showToast('Erreur', 'error');
+        }
+    }
+    
+    // ==================== MONITORING ====================
+    async function loadMonitoring() {
+        try {
+            // Load real-time metrics
+            const realtimeResponse = await API.get('/api/admin/monitoring/realtime');
+            const realtime = await realtimeResponse.json();
+            
+            if (realtime.success) {
+                document.getElementById('metric-cpu').textContent = realtime.cpu_usage;
+                document.getElementById('metric-cpu-bar').style.width = realtime.cpu_usage + '%';
+                
+                document.getElementById('metric-ram').textContent = realtime.ram_usage;
+                document.getElementById('metric-ram-bar').style.width = realtime.ram_usage + '%';
+                
+                document.getElementById('metric-gpu').textContent = realtime.gpu_usage;
+                document.getElementById('metric-gpu-bar').style.width = realtime.gpu_usage + '%';
+                
+                document.getElementById('metric-containers').textContent = realtime.running_containers;
+            }
+            
+            // Load charts
+            const chartsResponse = await API.get('/api/admin/monitoring/charts?days=7');
+            const charts = await chartsResponse.json();
+            
+            if (charts.success) {
+                // Resource usage chart (24h)
+                const resourceChart = document.getElementById('resource-chart');
+                const resourceLabels = document.getElementById('resource-chart-labels');
+                
+                resourceChart.innerHTML = charts.resource_history.map((d, i) => `
+                    <div class="flex-1 flex gap-0.5 h-full items-end">
+                        <div class="flex-1 bg-neon-blue/80 rounded-t transition-all" style="height: ${d.cpu}%"></div>
+                        <div class="flex-1 bg-neon-purple/80 rounded-t transition-all" style="height: ${d.ram}%"></div>
+                        <div class="flex-1 bg-green-400/80 rounded-t transition-all" style="height: ${d.gpu}%"></div>
+                    </div>
+                `).join('');
+                
+                // Show only every 4th label
+                resourceLabels.innerHTML = charts.resource_history
+                    .filter((_, i) => i % 4 === 0)
+                    .map(d => `<span>${d.time}</span>`).join('');
+                
+                // Mode distribution
+                document.getElementById('mode-cpu').textContent = charts.mode_distribution.cpu;
+                document.getElementById('mode-gpu').textContent = charts.mode_distribution.gpu;
+                document.getElementById('mode-auto').textContent = charts.mode_distribution.auto;
+                
+                // Top users
+                const topUsersDiv = document.getElementById('top-users-chart');
+                if (charts.top_users.length > 0) {
+                    const maxJobs = Math.max(...charts.top_users.map(u => u.jobs));
+                    topUsersDiv.innerHTML = charts.top_users.map((u, i) => `
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 text-gray-400">#${i + 1}</span>
+                            <div class="flex-1">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>${u.email}</span>
+                                    <span class="text-neon-blue">${u.jobs} jobs</span>
+                                </div>
+                                <div class="h-2 bg-dark-bg rounded-full overflow-hidden">
+                                    <div class="h-full bg-neon-blue rounded-full" style="width: ${(u.jobs / maxJobs) * 100}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    topUsersDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Aucun utilisateur</p>';
+                }
+                
+                // Avg time chart
+                const maxTime = Math.max(...charts.avg_time_per_day.map(d => d.avg_time), 1);
+                const timeBars = document.getElementById('time-bars');
+                const timeLabels = document.getElementById('time-chart-labels');
+                
+                timeBars.innerHTML = charts.avg_time_per_day.map(d => {
+                    const height = (d.avg_time / maxTime) * 100;
+                    return `
+                        <div class="flex-1 flex flex-col justify-end items-center gap-1">
+                            <span class="text-xs text-gray-400">${d.avg_time}s</span>
+                            <div class="w-full bg-neon-purple rounded-t" style="height: ${height}%"></div>
+                        </div>
+                    `;
+                }).join('');
+                
+                timeLabels.innerHTML = charts.avg_time_per_day.map(d => `<span>${d.label}</span>`).join('');
+            }
+            
+        } catch (error) {
+            console.error('Failed to load monitoring:', error);
+        }
+    }
+    
+    // ==================== MACHINES ====================
+    async function loadMachines() {
+        const machinesList = document.getElementById('machines-list');
+        
+        try {
+            const sysResponse = await API.get('/api/status');
+            const sysData = await sysResponse.json();
+            
+            machinesList.innerHTML = `
+                <div class="bg-dark-bg rounded-lg p-4 border border-dark-border">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full ${sysData.docker_available ? 'bg-green-400' : 'bg-red-400'}"></div>
+                            <span class="font-medium">Serveur Local</span>
+                        </div>
+                        <span class="text-xs text-gray-400">localhost:8080</span>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">Docker:</span>
+                            <span class="${sysData.docker_available ? 'text-green-400' : 'text-red-400'}">
+                                ${sysData.docker_available ? 'Actif' : 'Inactif'}
+                            </span>
+                        </p>
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">GPU:</span>
+                            <span class="${sysData.gpu_available ? 'text-green-400' : 'text-gray-400'}">
+                                ${sysData.gpu_available ? 'Disponible' : 'Non disponible'}
+                            </span>
+                        </p>
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">Jobs en cours:</span>
+                            <span class="text-yellow-400">${sysData.running_jobs}</span>
+                        </p>
+                        <p class="flex justify-between">
+                            <span class="text-gray-400">Profils:</span>
+                            <span class="text-neon-blue text-xs">${sysData.resource_profiles.join(', ')}</span>
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+        } catch (error) {
+            machinesList.innerHTML = '<p class="text-red-400 col-span-full text-center py-4">Erreur de chargement</p>';
+        }
+    }
+    
+    function refreshMachines() {
+        loadMachines();
+        showToast('Machines actualisées', 'success');
+    }
+    
+    // ==================== JOB DETAILS ====================
+    async function viewJobDetails(jobId) {
+        try {
+            const response = await API.get(`/api/jobs/${jobId}`);
+            const job = await response.json();
+            
+            document.getElementById('modal-job-id').textContent = jobId;
+            document.getElementById('modal-job-content').innerHTML = `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-dark-bg rounded-lg p-3">
+                            <p class="text-gray-400 text-sm">Statut</p>
+                            <p class="font-medium"><span class="badge-${job.status}">${job.status}</span></p>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-3">
+                            <p class="text-gray-400 text-sm">Mode</p>
+                            <p class="font-medium uppercase">${job.execution_mode}</p>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-3">
+                            <p class="text-gray-400 text-sm">Durée</p>
+                            <p class="font-medium">${job.duration_seconds ? job.duration_seconds.toFixed(2) + 's' : '-'}</p>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-3">
+                            <p class="text-gray-400 text-sm">Profil</p>
+                            <p class="font-medium">${job.resource_profile}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-dark-bg rounded-lg p-4">
+                        <p class="text-gray-400 text-sm mb-2">Sortie</p>
+                        <pre class="text-sm text-gray-300 whitespace-pre-wrap max-h-48 overflow-y-auto">${job.output || 'Pas de sortie'}</pre>
+                    </div>
+                    
+                    ${job.error_message ? `
+                        <div class="bg-red-500/10 rounded-lg p-4 border border-red-500/30">
+                            <p class="text-red-400 text-sm mb-2">Erreur</p>
+                            <pre class="text-sm text-red-300 whitespace-pre-wrap">${job.error_message}</pre>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            document.getElementById('job-details-modal').classList.remove('hidden');
+        } catch (error) {
+            showToast('Erreur de chargement', 'error');
+        }
+    }
+    
+    function closeJobDetailsModal() {
+        document.getElementById('job-details-modal').classList.add('hidden');
+    }
+    
+    // ==================== HELPERS ====================
+    function getStatusColor(status) {
+        const colors = {
+            'success': 'bg-green-400',
+            'failed': 'bg-red-400',
+            'running': 'bg-yellow-400',
+            'pending': 'bg-blue-400',
+            'queued': 'bg-purple-400',
+            'cancelled': 'bg-gray-400',
+            'timeout': 'bg-orange-400'
+        };
+        return colors[status] || 'bg-gray-400';
+    }
+    
+    function getRunningTime(startedAt) {
+        if (!startedAt) return '-';
+        const start = new Date(startedAt);
+        const now = new Date();
+        const diff = Math.floor((now - start) / 1000);
+        
+        if (diff < 60) return diff + 's';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ' + (diff % 60) + 's';
+        return Math.floor(diff / 3600) + 'h ' + Math.floor((diff % 3600) / 60) + 'm';
+    }
+    
+    // Initial load
+    loadDashboard();
+    
+    // Auto-refresh every 10 seconds
+    setInterval(() => {
+        const activeTab = document.querySelector('.admin-tab.bg-red-500\\/20');
+        if (activeTab) {
+            const tabName = activeTab.id.replace('tab-', '');
+            if (tabName === 'dashboard') loadDashboard();
+            if (tabName === 'processes') loadProcesses();
+            if (tabName === 'monitoring') loadMonitoring();
+        }
+    }, 10000);
+</script>
+{% endblock %}

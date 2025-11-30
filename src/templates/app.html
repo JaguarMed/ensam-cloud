@@ -1,0 +1,1114 @@
+{% extends "base.html" %}
+
+{% block title %}Mon Espace - ENSAM Cloud Platform{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col">
+    <!-- Navigation Bar -->
+    <nav class="glass-card border-b border-dark-border px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-neon-blue to-neon-purple flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold">Cloud Platform</span>
+                    <span class="px-2 py-1 rounded-full text-xs bg-neon-blue/20 text-neon-blue font-medium">CLIENT</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- GPU Status -->
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full 
+                            {% if gpu_available %}bg-green-500/20 text-green-400{% else %}bg-gray-500/20 text-gray-400{% endif %}">
+                    <div class="w-2 h-2 rounded-full {% if gpu_available %}bg-green-400{% else %}bg-gray-400{% endif %}"></div>
+                    <span class="text-sm font-medium">GPU {% if gpu_available %}Disponible{% else %}Indisponible{% endif %}</span>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <p id="user-name" class="text-sm font-medium"></p>
+                        <p id="user-email" class="text-xs text-gray-400"></p>
+                    </div>
+                    <button onclick="logout()" class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors" title="Déconnexion">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="flex items-center gap-2 mt-4">
+            <button onclick="switchClientTab('editor')" id="tab-editor" 
+                    class="client-tab px-4 py-2 rounded-lg bg-neon-blue/20 text-neon-blue font-medium">
+                📝 Éditeur
+            </button>
+            <button onclick="switchClientTab('jobs')" id="tab-jobs" 
+                    class="client-tab px-4 py-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
+                📋 Mes Jobs
+            </button>
+            <button onclick="switchClientTab('stats')" id="tab-stats" 
+                    class="client-tab px-4 py-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
+                📊 Statistiques
+            </button>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="flex-1 p-6">
+        
+        <!-- ==================== EDITOR TAB ==================== -->
+        <div id="panel-editor" class="client-panel">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                <!-- Left Panel: Code Editor -->
+                <div class="glass-card rounded-xl p-6 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <svg class="w-5 h-5 text-neon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                            </svg>
+                            Script Python
+                        </h2>
+                        
+                        <!-- File Upload -->
+                        <div class="flex gap-2">
+                            <label class="cursor-pointer px-3 py-1.5 rounded-lg border border-dark-border hover:border-neon-blue/50 text-sm text-gray-400 hover:text-white transition-all flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                <span>Importer .py</span>
+                                <input type="file" id="file-upload" accept=".py" class="hidden">
+                            </label>
+                            <label class="cursor-pointer px-3 py-1.5 rounded-lg border border-dark-border hover:border-neon-blue/50 text-sm text-gray-400 hover:text-white transition-all flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span>CSV/Excel</span>
+                                <input type="file" id="data-upload" accept=".csv,.xlsx,.xls" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Code Textarea -->
+                    <div class="flex-1 relative">
+                        <textarea 
+                            id="code-editor"
+                            class="w-full h-full min-h-[300px] code-editor rounded-lg p-4 text-sm resize-none focus:outline-none"
+                            placeholder="# Écrivez votre code Python ici...&#10;&#10;# Exemple 1: Traitement de données avec pandas&#10;import pandas as pd&#10;&#10;# Charger un fichier CSV&#10;# df = pd.read_csv('data.csv')&#10;&#10;# Créer un DataFrame&#10;df = pd.DataFrame({&#10;    'nom': ['Alice', 'Bob', 'Charlie'],&#10;    'age': [25, 30, 35],&#10;    'ville': ['Paris', 'Lyon', 'Marseille']&#10;})&#10;&#10;# Afficher les données&#10;print(df)&#10;&#10;# Exporter en Excel&#10;# df.to_excel('resultat.xlsx', index=False)"
+                            spellcheck="false"
+                        ></textarea>
+                    </div>
+                    
+                    <!-- Execution Options - Mode Google Colab (détection automatique) -->
+                    <div class="mt-4 flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-400">Ressources:</label>
+                            <div class="flex items-center gap-2">
+                                <span id="resource-badge" class="px-3 py-2 bg-neon-blue/20 text-neon-blue rounded-lg text-sm font-medium">
+                                    🤖 Auto
+                                </span>
+                                <button 
+                                    id="advanced-options-btn"
+                                    onclick="toggleAdvancedOptions()"
+                                    class="text-xs text-gray-400 hover:text-gray-300 transition-colors"
+                                >
+                                    Options avancées ▼
+                                </button>
+                            </div>
+                        </div>
+                        <div id="advanced-options" class="hidden w-full mt-3 p-4 bg-dark-bg/50 rounded-lg border border-dark-border space-y-4">
+                            <!-- Profil prédéfini -->
+                            <div>
+                                <label class="text-xs text-gray-400 mb-1 block">Profil:</label>
+                                <select id="resource-profile" class="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:border-neon-blue outline-none w-full" onchange="handleProfileChange()">
+                                    <option value="auto" selected>🤖 Auto (détection intelligente)</option>
+                                    <option value="small">Small (512MB RAM, 512 CPU)</option>
+                                    <option value="medium">Medium (2GB RAM, 1024 CPU)</option>
+                                    <option value="large">Large (4GB RAM, 2048 CPU)</option>
+                                    <option value="gpu">GPU (6GB RAM, 2048 CPU)</option>
+                                    <option value="custom">⚙️ Personnalisé</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Configuration personnalisée - Affichée seulement si "Personnalisé" est sélectionné -->
+                            <div id="custom-config-section" class="hidden pt-2 border-t border-dark-border">
+                                <p class="text-xs text-gray-400 mb-2">⚙️ Configuration personnalisée:</p>
+                                
+                                <div class="grid grid-cols-2 gap-3">
+                                    <!-- Mémoire -->
+                                    <div>
+                                        <label class="text-xs text-gray-400 mb-1 block">Mémoire (MB):</label>
+                                        <input 
+                                            type="number" 
+                                            id="custom-memory" 
+                                            min="256" 
+                                            max="8192" 
+                                            step="256"
+                                            placeholder="Ex: 2048"
+                                            class="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:border-neon-blue outline-none w-full"
+                                        >
+                                    </div>
+                                    
+                                    <!-- CPU Shares -->
+                                    <div>
+                                        <label class="text-xs text-gray-400 mb-1 block">CPU Shares:</label>
+                                        <input 
+                                            type="number" 
+                                            id="custom-cpu" 
+                                            min="256" 
+                                            max="4096" 
+                                            step="256"
+                                            placeholder="Ex: 1024"
+                                            class="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:border-neon-blue outline-none w-full"
+                                        >
+                                    </div>
+                                    
+                                    <!-- GPU -->
+                                    <div class="col-span-2">
+                                        <label class="text-xs text-gray-400 mb-1 block">GPU:</label>
+                                        <select id="custom-gpu" class="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:border-neon-blue outline-none w-full">
+                                            <option value="auto">Auto (détection)</option>
+                                            <option value="true">Forcer GPU</option>
+                                            <option value="false">Forcer CPU</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <p class="text-xs text-gray-500 italic mt-2">
+                                    💡 Configurez vos ressources personnalisées. Le timeout est géré automatiquement.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-500 italic">
+                            💡 GPU/CPU détecté automatiquement selon votre code
+                        </div>
+                        
+                        <button 
+                            id="run-button"
+                            onclick="submitJob()"
+                            class="ml-auto px-6 py-2.5 rounded-lg btn-neon text-white font-semibold flex items-center gap-2"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span id="run-btn-text">Exécuter</span>
+                        </button>
+                        <button 
+                            id="stop-button"
+                            class="hidden ml-auto px-6 py-2.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 rounded-lg font-medium transition-all flex items-center gap-2"
+                            onclick="stopCurrentJob()"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+                            </svg>
+                            <span>Arrêter</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Right Panel: Output & Status -->
+                <div class="glass-card rounded-xl p-6 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Console
+                        </h2>
+                        
+                        <div id="job-status-badge" class="hidden px-3 py-1 rounded-full text-xs font-medium">
+                        </div>
+                    </div>
+                    
+                    <!-- Console Output -->
+                    <div id="console-output" class="flex-1 bg-dark-bg rounded-lg p-4 font-mono text-sm overflow-auto min-h-[300px]" style="max-height: 600px;">
+                    </div>
+                    <div id="job-files" class="hidden mt-4">
+                        <p class="text-gray-500">En attente d'exécution...</p>
+                    </div>
+                    
+                    <!-- Job Info -->
+                    <div id="job-info" class="hidden mt-4 grid grid-cols-3 gap-4">
+                        <div class="bg-dark-bg rounded-lg p-3 text-center">
+                            <p class="text-gray-400 text-xs mb-1">Job ID</p>
+                            <p id="info-job-id" class="font-mono text-neon-blue">-</p>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-3 text-center">
+                            <p class="text-gray-400 text-xs mb-1">Durée</p>
+                            <p id="info-duration" class="font-mono">-</p>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-3 text-center">
+                            <p class="text-gray-400 text-xs mb-1">Mode</p>
+                            <p id="info-mode" class="font-mono uppercase">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== JOBS TAB ==================== -->
+        <div id="panel-jobs" class="client-panel hidden">
+            <div class="glass-card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">📋 Mes Jobs</h3>
+                    <button onclick="loadMyJobs()" class="px-4 py-2 rounded-lg bg-neon-blue/20 text-neon-blue text-sm font-medium hover:bg-neon-blue/30 transition-colors">
+                        🔄 Actualiser
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-400 text-sm border-b border-dark-border">
+                                <th class="pb-3 font-medium">ID</th>
+                                <th class="pb-3 font-medium">Script</th>
+                                <th class="pb-3 font-medium">Statut</th>
+                                <th class="pb-3 font-medium">Mode</th>
+                                <th class="pb-3 font-medium">Durée</th>
+                                <th class="pb-3 font-medium">Date</th>
+                                <th class="pb-3 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="my-jobs-table" class="text-sm">
+                            <tr>
+                                <td colspan="7" class="py-8 text-center text-gray-500">Chargement...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div id="jobs-pagination" class="flex items-center justify-between mt-4 pt-4 border-t border-dark-border">
+                    <p id="jobs-count" class="text-sm text-gray-400">-</p>
+                    <div class="flex gap-2">
+                        <button id="prev-page" onclick="changePage(-1)" class="px-3 py-1 rounded bg-dark-bg text-gray-400 hover:text-white disabled:opacity-50" disabled>
+                            ← Précédent
+                        </button>
+                        <button id="next-page" onclick="changePage(1)" class="px-3 py-1 rounded bg-dark-bg text-gray-400 hover:text-white disabled:opacity-50" disabled>
+                            Suivant →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== STATS TAB ==================== -->
+        <div id="panel-stats" class="client-panel hidden">
+            <!-- Personal Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Total Jobs</p>
+                            <p id="my-stat-total" class="text-3xl font-bold mt-1">-</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Réussis</p>
+                            <p id="my-stat-success" class="text-3xl font-bold mt-1 text-green-400">-</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Échoués</p>
+                            <p id="my-stat-failed" class="text-3xl font-bold mt-1 text-red-400">-</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Taux de succès</p>
+                            <p id="my-stat-rate" class="text-3xl font-bold mt-1 text-neon-purple">-</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Usage Info -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">📊 Répartition par mode</h3>
+                    <div class="flex justify-center gap-8 py-8">
+                        <div class="text-center">
+                            <div id="stat-cpu-jobs" class="text-4xl font-bold text-blue-400">-</div>
+                            <div class="text-sm text-gray-400 mt-2">Jobs CPU</div>
+                        </div>
+                        <div class="text-center">
+                            <div id="stat-gpu-jobs" class="text-4xl font-bold text-green-400">-</div>
+                            <div class="text-sm text-gray-400 mt-2">Jobs GPU</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">⏱️ Temps d'exécution</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Temps total</span>
+                            <span id="stat-total-time" class="font-mono text-neon-blue">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Temps moyen</span>
+                            <span id="stat-avg-time" class="font-mono text-neon-purple">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Job le plus long</span>
+                            <span id="stat-max-time" class="font-mono text-yellow-400">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Job Details Modal -->
+<div id="job-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="glass-card rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold">Détails du Job #<span id="modal-job-id"></span></h3>
+            <button onclick="closeJobModal()" class="text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="modal-content"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Make functions globally accessible
+    // Note: logout() is already defined in base.html, no need to override
+    // Note: stopCurrentJob will be defined below, don't set to null
+    window.submitJob = null;
+    window.toggleAdvancedOptions = null;
+    window.switchClientTab = null;
+    window.loadMyJobs = null;
+    window.loadMyStats = null;
+    window.cancelJob = null;
+    window.viewJob = null;
+    window.closeJobModal = null;
+    window.changePage = null;
+    
+    // Check authentication
+    if (!TokenManager.isAuthenticated()) {
+        window.location.href = '/login';
+    }
+    
+    // Display user info
+    const user = TokenManager.getUser();
+    if (user) {
+        const userNameEl = document.getElementById('user-name');
+        const userEmailEl = document.getElementById('user-email');
+        if (userNameEl) userNameEl.textContent = user.full_name || 'Utilisateur';
+        if (userEmailEl) userEmailEl.textContent = user.email;
+    }
+    
+    // Ensure advanced options are hidden by default
+    const advancedOptions = document.getElementById('advanced-options');
+    if (advancedOptions) {
+        advancedOptions.classList.add('hidden');
+    }
+    
+    // Ensure custom config section is hidden by default
+    const customConfigSection = document.getElementById('custom-config-section');
+    if (customConfigSection) {
+        customConfigSection.classList.add('hidden');
+    }
+    
+    // Current state
+    let currentJobId = null;
+    let ws = null;
+    let currentPage = 1;
+    let totalPages = 1;
+    
+    // Tab switching - Make globally accessible
+    window.switchClientTab = function switchClientTab(tab) {
+        try {
+            // Update tab buttons
+            document.querySelectorAll('.client-tab').forEach(btn => {
+                btn.classList.remove('bg-neon-blue/20', 'text-neon-blue');
+                btn.classList.add('text-gray-400');
+            });
+            const tabBtn = document.getElementById(`tab-${tab}`);
+            if (tabBtn) {
+                tabBtn.classList.add('bg-neon-blue/20', 'text-neon-blue');
+                tabBtn.classList.remove('text-gray-400');
+            }
+            
+            // Update panels
+            document.querySelectorAll('.client-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            const panel = document.getElementById(`panel-${tab}`);
+            if (panel) {
+                panel.classList.remove('hidden');
+            } else {
+                console.error(`Panel panel-${tab} not found`);
+            }
+            
+            // Load data
+            if (tab === 'jobs') {
+                setTimeout(() => loadMyJobs(), 100);
+            }
+            if (tab === 'stats') {
+                setTimeout(() => loadMyStats(), 100);
+            }
+        } catch (error) {
+            console.error('Error switching tab:', error);
+            showToast('Erreur lors du changement d\'onglet', 'error');
+        }
+    }
+    
+    // File upload handler
+    document.getElementById('file-upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const content = await file.text();
+            document.getElementById('code-editor').value = content;
+            showToast(`Fichier "${file.name}" chargé`, 'success');
+        }
+    });
+    
+    // CSV/Excel upload handler
+    document.getElementById('data-upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+            showToast('Téléchargement du fichier...', 'info');
+            const response = await fetch('/api/jobs/upload-data', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Generate example code to use the uploaded file
+                const exampleCode = `# Fichier chargé: ${result.filename}
+import pandas as pd
+
+# Charger le fichier
+df = pd.read_csv('${result.filename}')  # ou pd.read_excel('${result.filename}')
+
+# Aperçu des données
+print("Shape:", df.shape)
+print("\\nPremières lignes:")
+print(df.head())
+
+# Statistiques
+print("\\nStatistiques:")
+print(df.describe())
+
+# Exemple: Filtrer et exporter
+# df_filtered = df[df['colonne'] > valeur]
+# df_filtered.to_excel('resultat.xlsx', index=False)
+`;
+                
+                document.getElementById('code-editor').value = exampleCode;
+                showToast(result.message, 'success');
+                
+                // Show preview in console
+                console.log('Data Preview:', result.preview);
+                console.log('Statistics:', result.statistics);
+            } else {
+                showToast('Erreur lors du téléchargement', 'error');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            showToast('Erreur lors du téléchargement du fichier', 'error');
+        }
+    });
+    
+    // Handle profile change - Show/hide custom config and update badge
+    window.handleProfileChange = function handleProfileChange() {
+        const profileSelect = document.getElementById('resource-profile');
+        const customConfigSection = document.getElementById('custom-config-section');
+        const resourceBadge = document.getElementById('resource-badge');
+        
+        if (!profileSelect) return;
+        
+        const selectedProfile = profileSelect.value;
+        
+        // Update badge text
+        if (resourceBadge) {
+            const profileNames = {
+                'auto': '🤖 Auto',
+                'small': '📦 Small',
+                'medium': '📦 Medium',
+                'large': '📦 Large',
+                'gpu': '🎮 GPU',
+                'custom': '⚙️ Personnalisé'
+            };
+            resourceBadge.textContent = profileNames[selectedProfile] || '🤖 Auto';
+        }
+        
+        // Show custom config only if "custom" is selected
+        if (customConfigSection) {
+            if (selectedProfile === 'custom') {
+                customConfigSection.classList.remove('hidden');
+            } else {
+                customConfigSection.classList.add('hidden');
+                // Clear custom values when switching away from custom
+                const customMemory = document.getElementById('custom-memory');
+                const customCpu = document.getElementById('custom-cpu');
+                const customGpu = document.getElementById('custom-gpu');
+                if (customMemory) customMemory.value = '';
+                if (customCpu) customCpu.value = '';
+                if (customGpu) customGpu.value = 'auto';
+            }
+        }
+    }
+    
+    // Toggle advanced options - Make globally accessible
+    window.toggleAdvancedOptions = function toggleAdvancedOptions() {
+        const advancedDiv = document.getElementById('advanced-options');
+        const btn = document.getElementById('advanced-options-btn');
+        if (advancedDiv.classList.contains('hidden')) {
+            advancedDiv.classList.remove('hidden');
+            btn.textContent = 'Options avancées ▲';
+            // Update custom config visibility based on current selection
+            handleProfileChange();
+        } else {
+            advancedDiv.classList.add('hidden');
+            btn.textContent = 'Options avancées ▼';
+        }
+    }
+    
+    // Submit job - Make globally accessible
+    window.submitJob = async function submitJob() {
+        const code = document.getElementById('code-editor').value.trim();
+        if (!code) {
+            showToast('Veuillez entrer du code Python', 'warning');
+            return;
+        }
+        
+        // Mode automatique comme Google Colab - détection intelligente
+        const executionMode = 'auto';  // Toujours auto pour détection automatique
+        
+        // Get resource profile
+        const resourceProfileSelect = document.getElementById('resource-profile');
+        const resourceProfile = resourceProfileSelect ? resourceProfileSelect.value : 'auto';
+        
+        // Get custom configuration if provided
+        const customMemory = document.getElementById('custom-memory').value;
+        const customCpu = document.getElementById('custom-cpu').value;
+        const customGpu = document.getElementById('custom-gpu').value;
+        
+        // Build request with custom config if provided
+        const requestBody = {
+            code: code,
+            execution_mode: 'auto',
+            resource_profile: resourceProfile,
+            gpu_enabled: false
+        };
+        
+        // Add custom configuration if provided (timeout is managed automatically)
+        if (customMemory || customCpu || customGpu !== 'auto') {
+            requestBody.custom_config = {};
+            if (customMemory) requestBody.custom_config.memory_mb = parseInt(customMemory);
+            if (customCpu) requestBody.custom_config.cpu_shares = parseInt(customCpu);
+            // Timeout is automatically set based on profile - no need to configure it
+            if (customGpu !== 'auto') {
+                requestBody.gpu_enabled = customGpu === 'true';
+            }
+        }
+        
+        const runBtn = document.getElementById('run-button');
+        const btnText = document.getElementById('run-btn-text');
+        
+        runBtn.disabled = true;
+        btnText.textContent = 'Soumission...';
+        
+        const consoleDiv = document.getElementById('console-output');
+        consoleDiv.innerHTML = '<p class="text-neon-blue">⏳ Soumission du job...</p>';
+        
+        document.getElementById('job-info').classList.remove('hidden');
+        document.getElementById('job-status-badge').classList.remove('hidden');
+        document.getElementById('job-status-badge').className = 'px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400';
+        document.getElementById('job-status-badge').textContent = 'En attente';
+        
+        try {
+            const response = await API.post('/api/jobs/run', requestBody);
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                currentJobId = data.job_id;
+                showToast(`Job #${data.job_id} soumis`, 'success');
+                
+                document.getElementById('info-job-id').textContent = '#' + data.job_id;
+                document.getElementById('info-mode').textContent = data.execution_mode || 'auto';
+                
+                // Show stop button, hide run button
+                document.getElementById('run-button').classList.add('hidden');
+                document.getElementById('stop-button').classList.remove('hidden');
+                
+                // Connect to WebSocket
+                connectWebSocket(data.job_id);
+            } else {
+                consoleDiv.innerHTML = `<p class="text-red-400">❌ Erreur: ${data.detail || data.message}</p>`;
+                document.getElementById('job-status-badge').className = 'px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400';
+                document.getElementById('job-status-badge').textContent = 'Erreur';
+            }
+        } catch (error) {
+            consoleDiv.innerHTML = `<p class="text-red-400">❌ Erreur: ${error.message}</p>`;
+        } finally {
+            if (runBtn) runBtn.disabled = false;
+            if (btnText) btnText.textContent = 'Exécuter';
+            // Ensure buttons are in correct state
+            const runButton = document.getElementById('run-button');
+            const stopButton = document.getElementById('stop-button');
+            if (runButton && !currentJobId) runButton.classList.remove('hidden');
+            if (stopButton && !currentJobId) stopButton.classList.add('hidden');
+        }
+    }
+    
+    // WebSocket connection
+    function connectWebSocket(jobId) {
+        if (ws) ws.close();
+        
+        const token = TokenManager.getToken();
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/jobs/${jobId}/logs?token=${token}`;
+        
+        ws = new WebSocket(wsUrl);
+        const consoleDiv = document.getElementById('console-output');
+        
+        ws.onopen = () => {
+            consoleDiv.innerHTML = '<p class="text-neon-blue">🔗 Connecté au flux de logs...</p>';
+        };
+        
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'log') {
+                // Optimisation: limiter le nombre de lignes affichées pour éviter les ralentissements
+                const maxLines = 1000;
+                const lines = consoleDiv.querySelectorAll('p');
+                
+                // Si on dépasse la limite, supprimer les anciennes lignes
+                if (lines.length > maxLines) {
+                    for (let i = 0; i < lines.length - maxLines + 100; i++) {
+                        lines[i].remove();
+                    }
+                }
+                
+                const line = document.createElement('p');
+                line.className = data.stream === 'stderr' ? 'text-red-400' : 'text-gray-300';
+                line.textContent = data.message;
+                consoleDiv.appendChild(line);
+                
+                // Scroll seulement si on est déjà en bas
+                const isScrolledToBottom = consoleDiv.scrollHeight - consoleDiv.clientHeight <= consoleDiv.scrollTop + 1;
+                if (isScrolledToBottom) {
+                    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+                }
+            } else if (data.type === 'status') {
+                updateStatusBadge(data.status);
+            } else if (data.type === 'complete') {
+                updateStatusBadge(data.status);
+                if (data.duration) {
+                    document.getElementById('info-duration').textContent = data.duration.toFixed(2) + 's';
+                }
+                
+                const line = document.createElement('p');
+                line.className = `mt-2 font-semibold ${data.status === 'success' ? 'text-green-400' : 'text-red-400'}`;
+                line.textContent = `✓ Job terminé: ${data.status.toUpperCase()}`;
+                consoleDiv.appendChild(line);
+            }
+        };
+        
+        ws.onerror = () => {
+            pollJobStatus(jobId);
+        };
+    }
+    
+    function updateStatusBadge(status) {
+        const badge = document.getElementById('job-status-badge');
+        const colors = {
+            'pending': 'bg-blue-500/20 text-blue-400',
+            'queued': 'bg-purple-500/20 text-purple-400',
+            'running': 'bg-yellow-500/20 text-yellow-400',
+            'success': 'bg-green-500/20 text-green-400',
+            'failed': 'bg-red-500/20 text-red-400',
+            'cancelled': 'bg-gray-500/20 text-gray-400',
+            'timeout': 'bg-orange-500/20 text-orange-400'
+        };
+        badge.className = `px-3 py-1 rounded-full text-xs font-medium ${colors[status] || colors.pending}`;
+        badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    }
+    
+    // Fallback polling
+    async function pollJobStatus(jobId) {
+        const consoleDiv = document.getElementById('console-output');
+        
+        const poll = async () => {
+            try {
+                const response = await API.get(`/api/jobs/${jobId}`);
+                const job = await response.json();
+                
+                updateStatusBadge(job.status);
+                
+                if (job.output) {
+                    consoleDiv.innerHTML = '';
+                    job.output.split('\n').forEach(line => {
+                        const p = document.createElement('p');
+                        p.className = 'text-gray-300';
+                        p.textContent = line;
+                        consoleDiv.appendChild(p);
+                    });
+                }
+                
+                if (['success', 'failed', 'cancelled', 'timeout'].includes(job.status)) {
+                    if (job.duration_seconds) {
+                        document.getElementById('info-duration').textContent = job.duration_seconds.toFixed(2) + 's';
+                    }
+                    // Hide stop button, show run button
+                    document.getElementById('run-button').classList.remove('hidden');
+                    document.getElementById('stop-button').classList.add('hidden');
+                    currentJobId = null;
+                    
+                    // Load downloadable files if job succeeded
+                    if (job.status === 'success') {
+                        loadJobFiles(job.id);
+                    }
+                    return;
+                }
+                
+                setTimeout(poll, 2000);
+            } catch (error) {
+                setTimeout(poll, 5000);
+            }
+        };
+        
+        poll();
+    }
+    
+    // Load my jobs - Make globally accessible
+    window.loadMyJobs = async function loadMyJobs() {
+        try {
+            const tbody = document.getElementById('my-jobs-table');
+            if (!tbody) {
+                console.error('my-jobs-table not found');
+                return;
+            }
+            
+            const response = await API.get(`/api/jobs/history?page=${currentPage}&per_page=10`);
+            const data = await response.json();
+            
+            if (!data.jobs || data.jobs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-500">Aucun job</td></tr>';
+                return;
+            }
+            
+            totalPages = data.pages || 1;
+            document.getElementById('jobs-count').textContent = `${data.total} jobs au total`;
+            document.getElementById('prev-page').disabled = currentPage <= 1;
+            document.getElementById('next-page').disabled = currentPage >= totalPages;
+            
+            tbody.innerHTML = data.jobs.map(job => `
+                <tr class="border-b border-dark-border/50 hover:bg-white/5">
+                    <td class="py-3 font-mono text-neon-blue">#${job.id}</td>
+                    <td class="py-3">${job.script_name}</td>
+                    <td class="py-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium badge-${job.status}">${job.status}</span>
+                    </td>
+                    <td class="py-3 uppercase text-xs">${job.execution_mode}</td>
+                    <td class="py-3">${job.duration_seconds ? job.duration_seconds.toFixed(2) + 's' : '-'}</td>
+                    <td class="py-3 text-gray-400">${new Date(job.created_at).toLocaleString('fr-FR')}</td>
+                    <td class="py-3">
+                        <button onclick="viewJob(${job.id})" class="text-neon-blue hover:underline text-sm mr-2">
+                            Voir
+                        </button>
+                        ${['pending', 'queued', 'running'].includes(job.status) ? `
+                            <button onclick="cancelJob(${job.id})" class="text-red-400 hover:underline text-sm">
+                                Annuler
+                            </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `).join('');
+            
+        } catch (error) {
+            console.error('Failed to load jobs:', error);
+        }
+    }
+    
+    window.changePage = function changePage(delta) {
+        currentPage += delta;
+        loadMyJobs();
+    }
+    
+    // View job details - Make globally accessible
+    window.viewJob = async function viewJob(jobId) {
+        try {
+            const response = await API.get(`/api/jobs/${jobId}`);
+            const job = await response.json();
+            
+            document.getElementById('modal-job-id').textContent = jobId;
+            document.getElementById('modal-content').innerHTML = `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-dark-bg rounded-lg p-3">
+                            <p class="text-gray-400 text-sm">Statut</p>
+                            <p class="font-medium"><span class="badge-${job.status}">${job.status}</span></p>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-3">
+                            <p class="text-gray-400 text-sm">Mode</p>
+                            <p class="font-medium uppercase">${job.execution_mode}</p>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-3">
+                            <p class="text-gray-400 text-sm">Durée</p>
+                            <p class="font-medium">${job.duration_seconds ? job.duration_seconds.toFixed(2) + 's' : '-'}</p>
+                        </div>
+                        <div class="bg-dark-bg rounded-lg p-3">
+                            <p class="text-gray-400 text-sm">Profil</p>
+                            <p class="font-medium">${job.resource_profile}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-dark-bg rounded-lg p-4">
+                        <p class="text-gray-400 text-sm mb-2">Sortie</p>
+                        <pre class="text-sm text-gray-300 whitespace-pre-wrap max-h-48 overflow-y-auto">${job.output || 'Pas de sortie'}</pre>
+                    </div>
+                    
+                    ${job.error_message ? `
+                        <div class="bg-red-500/10 rounded-lg p-4 border border-red-500/30">
+                            <p class="text-red-400 text-sm mb-2">Erreur</p>
+                            <pre class="text-sm text-red-300 whitespace-pre-wrap">${job.error_message}</pre>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            document.getElementById('job-modal').classList.remove('hidden');
+        } catch (error) {
+            showToast('Erreur de chargement', 'error');
+        }
+    }
+    
+    window.closeJobModal = function closeJobModal() {
+        document.getElementById('job-modal').classList.add('hidden');
+    }
+    
+    // Note: currentJobId is already declared above
+    
+    // Stop current running job - Make globally accessible
+    window.stopCurrentJob = async function stopCurrentJob() {
+        if (!currentJobId) {
+            showToast('Aucun job en cours', 'warning');
+            return;
+        }
+        
+        if (confirm('Voulez-vous vraiment arrêter ce job ?')) {
+            // IMMEDIATE UI updates (no waiting)
+            const jobIdToCancel = currentJobId;
+            currentJobId = null; // Clear immediately to prevent double-click
+            
+            // Close WebSocket connection IMMEDIATELY
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            
+            // Clear console IMMEDIATELY
+            const consoleDiv = document.getElementById('console-output');
+            if (consoleDiv) {
+                consoleDiv.innerHTML = '';
+            }
+            
+            // Hide job info and status IMMEDIATELY
+            const jobInfo = document.getElementById('job-info');
+            const jobStatusBadge = document.getElementById('job-status-badge');
+            if (jobInfo) jobInfo.classList.add('hidden');
+            if (jobStatusBadge) jobStatusBadge.classList.add('hidden');
+            
+            // Update UI buttons IMMEDIATELY
+            const runButton = document.getElementById('run-button');
+            const stopButton = document.getElementById('stop-button');
+            if (runButton) runButton.classList.remove('hidden');
+            if (stopButton) stopButton.classList.add('hidden');
+            
+            // Show immediate feedback
+            showToast('Arrêt en cours...', 'info');
+            
+            // Cancel the job in background (don't wait for it)
+            cancelJob(jobIdToCancel).then(() => {
+                showToast('Job arrêté', 'success');
+            }).catch((error) => {
+                console.error('Error canceling job:', error);
+                // Don't show error to user - UI is already cleared
+                // The job will be cleaned up eventually
+            });
+        }
+    }
+    
+    // Cancel job - Make globally accessible
+    window.cancelJob = async function cancelJob(jobId) {
+        if (!confirm('Voulez-vous vraiment annuler ce job ?')) return;
+        
+        try {
+            const response = await API.post(`/api/jobs/${jobId}/cancel`, {});
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Job annulé', 'success');
+                // Hide stop button, show run button if this was the current job
+                if (currentJobId === jobId) {
+                    document.getElementById('run-button').classList.remove('hidden');
+                    document.getElementById('stop-button').classList.add('hidden');
+                    currentJobId = null;
+                }
+                loadMyJobs();
+            } else {
+                showToast(data.message || 'Erreur', 'error');
+            }
+        } catch (error) {
+            showToast('Erreur', 'error');
+        }
+    }
+    
+    // Load and display downloadable files for a job
+    async function loadJobFiles(jobId) {
+        try {
+            const response = await API.get(`/api/jobs/${jobId}/files`);
+            const data = await response.json();
+            
+            if (data.success && data.files && data.files.length > 0) {
+                const filesDiv = document.getElementById('job-files');
+                if (!filesDiv) return;
+                
+                filesDiv.innerHTML = `
+                    <div class="p-4 bg-dark-bg/50 rounded-lg border border-dark-border">
+                        <h4 class="text-sm font-semibold text-white mb-2">📁 Fichiers générés:</h4>
+                        <div class="space-y-2">
+                            ${data.files.map(file => `
+                                <div class="flex items-center justify-between p-2 bg-dark-bg rounded">
+                                    <span class="text-sm text-gray-300">${file.name}</span>
+                                    <a href="/api/jobs/${jobId}/download/${encodeURIComponent(file.name)}" 
+                                       download="${file.name}"
+                                       class="px-3 py-1 bg-neon-blue/20 hover:bg-neon-blue/30 text-neon-blue rounded text-sm transition-all">
+                                        📥 Télécharger
+                                    </a>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                filesDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error loading job files:', error);
+        }
+    }
+    
+    // Load my stats - Make globally accessible
+    window.loadMyStats = async function loadMyStats() {
+        try {
+            const response = await API.get('/api/jobs/history?per_page=1000');
+            const data = await response.json();
+            
+            if (!data.jobs) {
+                console.warn('No jobs data received for stats');
+                return;
+            }
+            
+            const jobs = data.jobs;
+            const total = jobs.length;
+            const success = jobs.filter(j => j.status === 'success').length;
+            const failed = jobs.filter(j => j.status === 'failed').length;
+            const cpuJobs = jobs.filter(j => j.execution_mode === 'cpu').length;
+            const gpuJobs = jobs.filter(j => j.execution_mode === 'gpu').length;
+            
+            const rate = total > 0 ? Math.round((success / total) * 100) : 0;
+            
+            document.getElementById('my-stat-total').textContent = total;
+            document.getElementById('my-stat-success').textContent = success;
+            document.getElementById('my-stat-failed').textContent = failed;
+            document.getElementById('my-stat-rate').textContent = rate + '%';
+            document.getElementById('stat-cpu-jobs').textContent = cpuJobs;
+            document.getElementById('stat-gpu-jobs').textContent = gpuJobs;
+            
+            // Calculate time stats
+            const durations = jobs.filter(j => j.duration_seconds).map(j => j.duration_seconds);
+            if (durations.length > 0) {
+                const totalTime = durations.reduce((a, b) => a + b, 0);
+                const avgTime = totalTime / durations.length;
+                const maxTime = Math.max(...durations);
+                
+                document.getElementById('stat-total-time').textContent = formatTime(totalTime);
+                document.getElementById('stat-avg-time').textContent = formatTime(avgTime);
+                document.getElementById('stat-max-time').textContent = formatTime(maxTime);
+            }
+            
+        } catch (error) {
+            console.error('Failed to load stats:', error);
+        }
+    }
+    
+    function formatTime(seconds) {
+        if (seconds < 60) return seconds.toFixed(2) + 's';
+        if (seconds < 3600) return Math.floor(seconds / 60) + 'm ' + Math.round(seconds % 60) + 's';
+        return Math.floor(seconds / 3600) + 'h ' + Math.floor((seconds % 3600) / 60) + 'm';
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,260 @@
+---
+# ENSAM Cloud Platform - Ansible Playbook
+# Déploiement automatisé sur serveur Ubuntu/Debian
+#
+# Usage:
+#   ansible-playbook -i inventory.ini playbook.yml
+#
+# Variables importantes:
+#   - gpu_enabled: true/false pour activer le support GPU
+#   - domain_name: nom de domaine pour HTTPS
+
+- name: Deploy ENSAM Cloud Platform
+  hosts: cloud_servers
+  become: yes
+  
+  vars:
+    app_name: ensam-cloud
+    app_dir: /opt/ensam-cloud
+    app_user: ensam
+    app_port: 8000
+    gpu_enabled: false
+    domain_name: "{{ inventory_hostname }}"
+    
+    # Ports à ouvrir
+    firewall_ports:
+      - "22"    # SSH
+      - "80"    # HTTP
+      - "443"   # HTTPS
+      - "8000"  # Application (dev)
+      - "9090"  # Prometheus
+      - "3000"  # Grafana
+  
+  tasks:
+    # =========================================================================
+    # Prérequis système
+    # =========================================================================
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+    
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - python3-pip
+          - git
+          - ufw
+        state: present
+    
+    # =========================================================================
+    # Installation Docker
+    # =========================================================================
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+    
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+    
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+    
+    - name: Add app user to docker group
+      user:
+        name: "{{ app_user }}"
+        groups: docker
+        append: yes
+        create_home: yes
+      ignore_errors: yes
+    
+    # =========================================================================
+    # Installation NVIDIA Container Toolkit (si GPU activé)
+    # =========================================================================
+    - name: Install NVIDIA Container Toolkit
+      block:
+        - name: Add NVIDIA GPG key
+          apt_key:
+            url: https://nvidia.github.io/libnvidia-container/gpgkey
+            state: present
+        
+        - name: Get distribution info
+          shell: . /etc/os-release && echo "$ID$VERSION_ID"
+          register: distribution
+          changed_when: false
+        
+        - name: Add NVIDIA repository
+          get_url:
+            url: "https://nvidia.github.io/libnvidia-container/{{ distribution.stdout }}/libnvidia-container.list"
+            dest: /etc/apt/sources.list.d/nvidia-container-toolkit.list
+        
+        - name: Install nvidia-container-toolkit
+          apt:
+            name: nvidia-container-toolkit
+            state: present
+            update_cache: yes
+        
+        - name: Configure Docker for NVIDIA
+          command: nvidia-ctk runtime configure --runtime=docker
+          notify: Restart Docker
+      when: gpu_enabled | bool
+    
+    # =========================================================================
+    # Configuration pare-feu (ufw)
+    # =========================================================================
+    - name: Configure UFW - Allow ports
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: "{{ firewall_ports }}"
+    
+    - name: Configure UFW - Default deny incoming
+      ufw:
+        default: deny
+        direction: incoming
+    
+    - name: Configure UFW - Default allow outgoing
+      ufw:
+        default: allow
+        direction: outgoing
+    
+    - name: Enable UFW
+      ufw:
+        state: enabled
+    
+    # =========================================================================
+    # Déploiement de l'application
+    # =========================================================================
+    - name: Create application directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0755'
+    
+    - name: Copy application files
+      synchronize:
+        src: ../
+        dest: "{{ app_dir }}/"
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=__pycache__"
+          - "--exclude=*.pyc"
+          - "--exclude=venv"
+          - "--exclude=.env"
+          - "--exclude=data/"
+      delegate_to: localhost
+    
+    - name: Create data directories
+      file:
+        path: "{{ app_dir }}/data/{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0755'
+      loop:
+        - scripts
+        - logs
+        - results
+    
+    - name: Create .env file from template
+      template:
+        src: templates/env.j2
+        dest: "{{ app_dir }}/.env"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0600'
+    
+    # =========================================================================
+    # Démarrage des services
+    # =========================================================================
+    - name: Start application with Docker Compose
+      community.docker.docker_compose:
+        project_src: "{{ app_dir }}/docker"
+        state: present
+        pull: yes
+      environment:
+        GPU_ENABLED: "{{ gpu_enabled | string | lower }}"
+    
+    # =========================================================================
+    # Configuration HTTPS avec Let's Encrypt (optionnel)
+    # =========================================================================
+    - name: Install Certbot for HTTPS
+      apt:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: present
+      when: domain_name != inventory_hostname
+    
+    - name: Obtain SSL certificate
+      command: >
+        certbot certonly --standalone
+        -d {{ domain_name }}
+        --non-interactive
+        --agree-tos
+        --email admin@{{ domain_name }}
+      args:
+        creates: "/etc/letsencrypt/live/{{ domain_name }}/fullchain.pem"
+      when: domain_name != inventory_hostname
+    
+  handlers:
+    - name: Restart Docker
+      systemd:
+        name: docker
+        state: restarted
+
+
+# =========================================================================
+# Playbook pour la mise à jour
+# =========================================================================
+- name: Update ENSAM Cloud Platform
+  hosts: cloud_servers
+  become: yes
+  tags: [update, never]
+  
+  vars:
+    app_dir: /opt/ensam-cloud
+  
+  tasks:
+    - name: Pull latest changes
+      git:
+        repo: "{{ git_repo | default('') }}"
+        dest: "{{ app_dir }}"
+        version: main
+        force: yes
+      when: git_repo is defined
+    
+    - name: Rebuild and restart containers
+      community.docker.docker_compose:
+        project_src: "{{ app_dir }}/docker"
+        state: present
+        build: yes
+        pull: yes
+
+
+
+
+

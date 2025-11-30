@@ -1,0 +1,25 @@
+# Cloud Platform Client App - Dependencies
+
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Templates
+jinja2==3.1.2
+
+# HTTP Client (for API proxy)
+httpx==0.25.2
+
+# Authentication
+PyJWT==2.8.0
+
+# Validation
+pydantic==2.5.2
+
+
+
+
+
+
+
+

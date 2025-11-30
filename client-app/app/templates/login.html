@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - Cloud Platform{% endblock %}
+
+{% block body %}
+<div class="relative min-h-screen flex items-center justify-center p-4">
+    <!-- Login Card -->
+    <div class="w-full max-w-md relative z-10 animate-fade-in">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-neon-blue to-neon-purple mb-4 shadow-lg shadow-neon-purple/25">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-neon-cyan via-neon-blue to-neon-purple bg-clip-text text-transparent">
+                Cloud Platform
+            </h1>
+            <p class="text-gray-500 mt-2">GPU-Powered Python Execution</p>
+        </div>
+        
+        <!-- Glass Card -->
+        <div class="glass-card rounded-2xl p-8">
+            <h2 class="text-xl font-semibold text-center mb-6">Welcome Back</h2>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-5">
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                            </svg>
+                        </span>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email"
+                            required
+                            class="input-field pl-12"
+                            placeholder="you@example.com"
+                            autocomplete="email"
+                        >
+                    </div>
+                </div>
+                
+                <!-- Password -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </span>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password"
+                            required
+                            class="input-field pl-12"
+                            placeholder="••••••••"
+                            autocomplete="current-password"
+                        >
+                    </div>
+                </div>
+                
+                <!-- Error Message -->
+                <div id="errorBox" class="hidden p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span id="errorText">Invalid credentials</span>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn" class="btn-primary w-full py-4">
+                    <span id="btnText">Sign In</span>
+                    <svg id="btnSpinner" class="hidden w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </form>
+            
+            <!-- Server Status -->
+            <div class="mt-6 pt-6 border-t border-white/5">
+                <div class="flex items-center justify-center gap-2 text-sm">
+                    <div id="serverStatus" class="w-2 h-2 rounded-full bg-gray-500"></div>
+                    <span id="serverStatusText" class="text-gray-500">Checking server...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <p class="text-center text-gray-600 text-sm mt-6">
+            ENSAM Rabat Cloud Computing © 2025
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Check if already logged in
+    if (TokenManager.isAuthenticated()) {
+        window.location.href = '/editor';
+    }
+    
+    // Check server status
+    async function checkServer() {
+        const statusDot = document.getElementById('serverStatus');
+        const statusText = document.getElementById('serverStatusText');
+        
+        try {
+            const response = await fetch('/api/health');
+            const data = await response.json();
+            
+            if (data.server_status === 'online') {
+                statusDot.className = 'w-2 h-2 rounded-full bg-green-400 animate-pulse';
+                statusText.textContent = 'Server online';
+                statusText.className = 'text-green-400';
+            } else {
+                statusDot.className = 'w-2 h-2 rounded-full bg-yellow-400';
+                statusText.textContent = 'Server unreachable';
+                statusText.className = 'text-yellow-400';
+            }
+        } catch (e) {
+            statusDot.className = 'w-2 h-2 rounded-full bg-red-400';
+            statusText.textContent = 'Connection error';
+            statusText.className = 'text-red-400';
+        }
+    }
+    
+    checkServer();
+    
+    // Handle login form
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorBox = document.getElementById('errorBox');
+        const errorText = document.getElementById('errorText');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+        
+        // Hide error
+        errorBox.classList.add('hidden');
+        
+        // Show loading
+        submitBtn.disabled = true;
+        btnText.textContent = 'Signing in...';
+        btnSpinner.classList.remove('hidden');
+        
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.token) {
+                TokenManager.setToken(data.token);
+                if (data.user) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                }
+                
+                btnText.textContent = 'Success!';
+                setTimeout(() => {
+                    window.location.href = '/editor';
+                }, 500);
+            } else {
+                throw new Error(data.message || 'Login failed');
+            }
+        } catch (error) {
+            errorText.textContent = error.message;
+            errorBox.classList.remove('hidden');
+            
+            submitBtn.disabled = false;
+            btnText.textContent = 'Sign In';
+            btnSpinner.classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+

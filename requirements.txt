@@ -1,0 +1,37 @@
+# ENSAM Cloud Platform - Dependencies
+# Python 3.10+
+
+# Web Framework
+fastapi
+uvicorn[standard]
+
+# Templates & Static Files
+jinja2
+python-multipart
+
+# Database
+sqlalchemy
+
+# Authentication
+python-jose[cryptography]
+passlib[bcrypt]
+
+# Configuration
+pydantic
+pydantic-settings
+
+# Docker
+docker
+
+# Prometheus Metrics
+prometheus-client
+
+# HTTP Client (for health checks)
+httpx
+
+# Data Processing
+pandas
+openpyxl
+
+# Development
+python-dotenv
