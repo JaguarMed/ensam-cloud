@@ -214,7 +214,7 @@ class DockerExecutor:
         
         return limits
     
-    def prepare_job_directory(self, job_id: int, script_content: str, use_gpu: bool = False) -> Path:
+    def prepare_job_directory(self, job_id: int, script_content: str, use_gpu: bool = False, user_id: Optional[int] = None) -> Path:
         """
         Prepare the job directory with script and output folders.
         
@@ -222,6 +222,7 @@ class DockerExecutor:
             job_id: Job identifier
             script_content: Python code to execute
             use_gpu: Whether this job will use GPU
+            user_id: User ID to copy uploaded files
             
         Returns:
             Path to the job directory
@@ -232,6 +233,28 @@ class DockerExecutor:
         # Write the script
         script_path = job_dir / "script.py"
         script_path.write_text(script_content, encoding="utf-8")
+        
+        # Create data directory and copy uploaded files
+        data_dir = job_dir / "data"
+        data_dir.mkdir(exist_ok=True)
+        
+        if user_id:
+            # Copy uploaded files from user's upload directory
+            upload_dir = Path(settings.SCRIPTS_DIR) / "uploads" / str(user_id)
+            if upload_dir.exists():
+                import shutil
+                copied_files = []
+                for file_path in upload_dir.iterdir():
+                    if file_path.is_file():
+                        dest_path = data_dir / file_path.name
+                        try:
+                            shutil.copy2(file_path, dest_path)
+                            copied_files.append(file_path.name)
+                            logger.info(f"Copied uploaded file {file_path.name} to job {job_id} data directory")
+                        except Exception as e:
+                            logger.error(f"Failed to copy {file_path.name}: {e}")
+                if copied_files:
+                    logger.info(f"Copied {len(copied_files)} file(s) to job {job_id}: {', '.join(copied_files)}")
         
         # Create wrapper script that installs dependencies and runs the script
         wrapper_script = self._create_wrapper_script(script_content, use_gpu=use_gpu)
@@ -286,7 +309,7 @@ class DockerExecutor:
             'torch': 'torch',
             'keras': 'keras',
             'numpy': 'numpy',
-            'pandas': 'pandas',
+            'pandas': 'pandas',  # pandas will be detected, we'll add Excel support separately
             'matplotlib': 'matplotlib',
             'sklearn': 'scikit-learn',
             'scipy': 'scipy',
@@ -308,6 +331,11 @@ class DockerExecutor:
                     # TensorFlow is pre-installed in the image, skip
                     continue
                 packages_to_install.append(pkg)
+        
+        # If pandas is used, automatically add Excel support libraries
+        if 'pandas' in imports and not any('openpyxl' in p for p in packages_to_install):
+            packages_to_install.append('openpyxl')  # For .xlsx files
+            packages_to_install.append('xlrd')  # For .xls files (older Excel format)
         
         # For GPU jobs with CUDA base image, add TensorFlow and CUDA libraries if needed
         if use_gpu and 'tensorflow' in imports and 'tensorflow/tensorflow' not in settings.DOCKER_IMAGE_GPU:
@@ -498,6 +526,14 @@ exec $PYTHON_CMD -u /tmp/script_wrapper.py
                 str(script_dir.absolute()): {
                     "bind": "/app",
                     "mode": "rw"
+                },
+                str((script_dir / "data").absolute()): {
+                    "bind": "/app/data",
+                    "mode": "ro"  # Read-only for uploaded files
+                },
+                str((script_dir / "output").absolute()): {
+                    "bind": "/app/output",
+                    "mode": "rw"  # Read-write for output files
                 }
             },
             "detach": True,
@@ -565,7 +601,8 @@ exec $PYTHON_CMD -u /tmp/script_wrapper.py
             script_dir = self.prepare_job_directory(
                 job.id,
                 job.script_content or "print('No script content')",
-                use_gpu=use_gpu
+                use_gpu=use_gpu,
+                user_id=job.user_id
             )
             
             # Update job status to RUNNING

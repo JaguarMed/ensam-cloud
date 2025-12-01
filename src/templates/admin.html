@@ -138,10 +138,30 @@
                 <!-- Jobs per day chart -->
                 <div class="glass-card rounded-xl p-6">
                     <h3 class="text-lg font-semibold mb-4">📊 Jobs des 7 derniers jours</h3>
-                    <div id="jobs-chart" class="h-48">
-                        <div class="flex items-end justify-between h-full gap-2" id="jobs-bars"></div>
+                    <div class="flex gap-2">
+                        <!-- Y-axis labels -->
+                        <div id="jobs-y-axis" class="flex flex-col justify-between text-xs text-gray-400 w-12 h-48 py-1"></div>
+                        <!-- Chart area -->
+                        <div id="jobs-chart" class="flex-1 h-48 relative">
+                            <svg id="jobs-chart-svg" class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="successGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:rgb(34, 197, 94);stop-opacity:0.8" />
+                                        <stop offset="100%" style="stop-color:rgb(34, 197, 94);stop-opacity:0.3" />
+                                    </linearGradient>
+                                    <linearGradient id="failedGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:rgb(239, 68, 68);stop-opacity:0.8" />
+                                        <stop offset="100%" style="stop-color:rgb(239, 68, 68);stop-opacity:0.3" />
+                                    </linearGradient>
+                                    <linearGradient id="totalGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:rgb(59, 130, 246);stop-opacity:0.6" />
+                                        <stop offset="100%" style="stop-color:rgb(59, 130, 246);stop-opacity:0.2" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
                     </div>
-                    <div id="jobs-chart-labels" class="flex justify-between mt-2 text-xs text-gray-400"></div>
+                    <div id="jobs-chart-labels" class="flex justify-between mt-2 text-xs text-gray-400 ml-14"></div>
                 </div>
                 
                 <!-- Status distribution -->
@@ -361,9 +381,9 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <!-- Jobs per mode -->
                 <div class="glass-card rounded-xl p-6">
-                    <h3 class="text-lg font-semibold mb-4">🔄 Jobs par mode d'exécution</h3>
+                    <h3 class="text-lg font-semibold mb-4">🔄 Jobs par mode d'exécution réel</h3>
                     <div class="flex items-center justify-center h-48">
-                        <div class="flex gap-8">
+                        <div class="flex gap-12">
                             <div class="text-center">
                                 <div class="w-24 h-24 rounded-full bg-blue-500/20 flex items-center justify-center mb-2">
                                     <span id="mode-cpu" class="text-2xl font-bold text-blue-400">-</span>
@@ -375,12 +395,6 @@
                                     <span id="mode-gpu" class="text-2xl font-bold text-green-400">-</span>
                                 </div>
                                 <span class="text-sm text-gray-400">GPU</span>
-                            </div>
-                            <div class="text-center">
-                                <div class="w-24 h-24 rounded-full bg-purple-500/20 flex items-center justify-center mb-2">
-                                    <span id="mode-auto" class="text-2xl font-bold text-purple-400">-</span>
-                                </div>
-                                <span class="text-sm text-gray-400">Auto</span>
                             </div>
                         </div>
                     </div>
@@ -398,10 +412,22 @@
             <!-- Avg Time Chart -->
             <div class="glass-card rounded-xl p-6 mb-6">
                 <h3 class="text-lg font-semibold mb-4">⏱️ Temps d'exécution moyen (7 jours)</h3>
-                <div id="avg-time-chart" class="h-48">
-                    <div class="flex items-end justify-between h-full gap-2" id="time-bars"></div>
+                <div class="flex gap-2">
+                    <!-- Y-axis labels -->
+                    <div id="time-y-axis" class="flex flex-col justify-between text-xs text-gray-400 w-12 h-48 py-1"></div>
+                    <!-- Chart area -->
+                    <div id="avg-time-chart" class="flex-1 h-48 relative">
+                        <svg id="time-chart-svg" class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="timeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:rgb(168, 85, 247);stop-opacity:0.8" />
+                                    <stop offset="100%" style="stop-color:rgb(168, 85, 247);stop-opacity:0.3" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
                 </div>
-                <div id="time-chart-labels" class="flex justify-between mt-2 text-xs text-gray-400"></div>
+                <div id="time-chart-labels" class="flex justify-between mt-2 text-xs text-gray-400 ml-14"></div>
             </div>
             
             <!-- Prometheus Link -->
@@ -649,22 +675,96 @@
             const chartsData = await chartsResponse.json();
             
             if (chartsData.success) {
-                // Jobs per day bar chart
+                // Jobs per day line chart
                 const maxJobs = Math.max(...chartsData.jobs_per_day.map(d => d.total), 1);
-                const barsContainer = document.getElementById('jobs-bars');
+                const svg = document.getElementById('jobs-chart-svg');
                 const labelsContainer = document.getElementById('jobs-chart-labels');
+                const yAxisContainer = document.getElementById('jobs-y-axis');
                 
-                barsContainer.innerHTML = chartsData.jobs_per_day.map(d => {
-                    const height = (d.total / maxJobs) * 100;
-                    const successHeight = d.total > 0 ? (d.success / d.total) * height : 0;
-                    return `
-                        <div class="flex-1 flex flex-col justify-end items-center gap-1">
-                            <span class="text-xs text-gray-400">${d.total}</span>
-                            <div class="w-full bg-red-500/50 rounded-t" style="height: ${height - successHeight}%"></div>
-                            <div class="w-full bg-green-500 rounded-t" style="height: ${successHeight}%"></div>
-                        </div>
-                    `;
-                }).join('');
+                // Generate Y-axis labels (5 ticks)
+                const yTicks = 5;
+                const yAxisLabels = [];
+                for (let i = 0; i <= yTicks; i++) {
+                    const value = Math.round((maxJobs / yTicks) * (yTicks - i));
+                    yAxisLabels.push(value);
+                }
+                yAxisContainer.innerHTML = yAxisLabels.map(v => `<span class="text-right">${v}</span>`).join('');
+                
+                // Clear previous content
+                svg.innerHTML = `
+                    <defs>
+                        <linearGradient id="successGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgb(34, 197, 94);stop-opacity:0.8" />
+                            <stop offset="100%" style="stop-color:rgb(34, 197, 94);stop-opacity:0.3" />
+                        </linearGradient>
+                        <linearGradient id="failedGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgb(239, 68, 68);stop-opacity:0.8" />
+                            <stop offset="100%" style="stop-color:rgb(239, 68, 68);stop-opacity:0.3" />
+                        </linearGradient>
+                        <linearGradient id="totalGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgb(59, 130, 246);stop-opacity:0.6" />
+                            <stop offset="100%" style="stop-color:rgb(59, 130, 246);stop-opacity:0.2" />
+                        </linearGradient>
+                    </defs>
+                `;
+                
+                // Add grid lines
+                for (let i = 0; i <= yTicks; i++) {
+                    const y = (i / yTicks) * 90 + 5; // 5% margin at top, 5% at bottom
+                    svg.innerHTML += `<line x1="0" y1="${y}" x2="100" y2="${y}" stroke="rgba(156, 163, 175, 0.2)" stroke-width="0.5" stroke-dasharray="2,2"/>`;
+                }
+                
+                const dataPoints = chartsData.jobs_per_day.length;
+                const stepX = 100 / (dataPoints - 1 || 1);
+                
+                // Create paths for the lines
+                let totalPath = '';
+                let successPath = '';
+                let failedPath = '';
+                let totalAreaPath = '';
+                let successAreaPath = '';
+                let failedAreaPath = '';
+                
+                chartsData.jobs_per_day.forEach((d, i) => {
+                    const x = i * stepX;
+                    const totalY = 100 - (d.total / maxJobs) * 90; // Leave 10% margin at top
+                    const successY = d.total > 0 ? 100 - (d.success / maxJobs) * 90 : 100;
+                    const failedY = d.total > 0 ? 100 - ((d.success + d.failed) / maxJobs) * 90 : 100;
+                    
+                    if (i === 0) {
+                        totalPath = `M ${x} ${totalY}`;
+                        successPath = `M ${x} ${successY}`;
+                        failedPath = `M ${x} ${failedY}`;
+                        totalAreaPath = `M ${x} 100 L ${x} ${totalY}`;
+                        successAreaPath = `M ${x} 100 L ${x} ${successY}`;
+                        failedAreaPath = `M ${x} ${successY} L ${x} ${failedY}`;
+                    } else {
+                        totalPath += ` L ${x} ${totalY}`;
+                        successPath += ` L ${x} ${successY}`;
+                        failedPath += ` L ${x} ${failedY}`;
+                        totalAreaPath += ` L ${x} ${totalY}`;
+                        successAreaPath += ` L ${x} ${successY}`;
+                        failedAreaPath += ` L ${x} ${failedY}`;
+                    }
+                    
+                    // Add points
+                    svg.innerHTML += `<circle cx="${x}" cy="${totalY}" r="2" fill="#3b82f6" class="hover:r-3 transition-all" title="Total: ${d.total}"/><circle cx="${x}" cy="${successY}" r="1.5" fill="#22c55e" class="hover:r-2.5 transition-all" title="Success: ${d.success}"/><circle cx="${x}" cy="${failedY}" r="1.5" fill="#ef4444" class="hover:r-2.5 transition-all" title="Failed: ${d.failed}"/>`;
+                });
+                
+                // Close area paths
+                totalAreaPath += ` L ${(dataPoints - 1) * stepX} 100 Z`;
+                successAreaPath += ` L ${(dataPoints - 1) * stepX} 100 Z`;
+                failedAreaPath += ` L ${(dataPoints - 1) * stepX} ${chartsData.jobs_per_day[dataPoints - 1].success > 0 ? 100 - (chartsData.jobs_per_day[dataPoints - 1].success / maxJobs) * 90 : 100} Z`;
+                
+                // Add area fills
+                svg.innerHTML += `<path d="${totalAreaPath}" fill="url(#totalGradient)" opacity="0.3"/>`;
+                svg.innerHTML += `<path d="${successAreaPath}" fill="url(#successGradient)" opacity="0.4"/>`;
+                svg.innerHTML += `<path d="${failedAreaPath}" fill="url(#failedGradient)" opacity="0.4"/>`;
+                
+                // Add lines
+                svg.innerHTML += `<path d="${totalPath}" stroke="#3b82f6" stroke-width="2" fill="none" class="drop-shadow-lg"/>`;
+                svg.innerHTML += `<path d="${successPath}" stroke="#22c55e" stroke-width="1.5" fill="none" stroke-dasharray="3,2"/>`;
+                svg.innerHTML += `<path d="${failedPath}" stroke="#ef4444" stroke-width="1.5" fill="none" stroke-dasharray="3,2"/>`;
                 
                 labelsContainer.innerHTML = chartsData.jobs_per_day.map(d => `<span>${d.label}</span>`).join('');
                 
@@ -1011,10 +1111,10 @@
                     .filter((_, i) => i % 4 === 0)
                     .map(d => `<span>${d.time}</span>`).join('');
                 
-                // Mode distribution
+                // Mode distribution (based on actual usage, not selection mode)
                 document.getElementById('mode-cpu').textContent = charts.mode_distribution.cpu;
                 document.getElementById('mode-gpu').textContent = charts.mode_distribution.gpu;
-                document.getElementById('mode-auto').textContent = charts.mode_distribution.auto;
+                // Auto is no longer displayed since all jobs use auto mode by default
                 
                 // Top users
                 const topUsersDiv = document.getElementById('top-users-chart');
@@ -1038,20 +1138,68 @@
                     topUsersDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Aucun utilisateur</p>';
                 }
                 
-                // Avg time chart
+                // Avg time line chart
                 const maxTime = Math.max(...charts.avg_time_per_day.map(d => d.avg_time), 1);
-                const timeBars = document.getElementById('time-bars');
+                const timeSvg = document.getElementById('time-chart-svg');
                 const timeLabels = document.getElementById('time-chart-labels');
+                const timeYAxisContainer = document.getElementById('time-y-axis');
                 
-                timeBars.innerHTML = charts.avg_time_per_day.map(d => {
-                    const height = (d.avg_time / maxTime) * 100;
-                    return `
-                        <div class="flex-1 flex flex-col justify-end items-center gap-1">
-                            <span class="text-xs text-gray-400">${d.avg_time}s</span>
-                            <div class="w-full bg-neon-purple rounded-t" style="height: ${height}%"></div>
-                        </div>
-                    `;
-                }).join('');
+                // Generate Y-axis labels (5 ticks)
+                const timeYTicks = 5;
+                const timeYAxisLabels = [];
+                for (let i = 0; i <= timeYTicks; i++) {
+                    const value = ((maxTime / timeYTicks) * (timeYTicks - i)).toFixed(1);
+                    timeYAxisLabels.push(value);
+                }
+                timeYAxisContainer.innerHTML = timeYAxisLabels.map(v => `<span class="text-right">${v}s</span>`).join('');
+                
+                // Clear previous content
+                timeSvg.innerHTML = `
+                    <defs>
+                        <linearGradient id="timeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgb(168, 85, 247);stop-opacity:0.8" />
+                            <stop offset="100%" style="stop-color:rgb(168, 85, 247);stop-opacity:0.3" />
+                        </linearGradient>
+                    </defs>
+                `;
+                
+                // Add grid lines
+                for (let i = 0; i <= timeYTicks; i++) {
+                    const y = (i / timeYTicks) * 90 + 5; // 5% margin at top, 5% at bottom
+                    timeSvg.innerHTML += `<line x1="0" y1="${y}" x2="100" y2="${y}" stroke="rgba(156, 163, 175, 0.2)" stroke-width="0.5" stroke-dasharray="2,2"/>`;
+                }
+                
+                const timeDataPoints = charts.avg_time_per_day.length;
+                const timeStepX = 100 / (timeDataPoints - 1 || 1);
+                
+                // Create path for the line
+                let timePath = '';
+                let timeAreaPath = '';
+                
+                charts.avg_time_per_day.forEach((d, i) => {
+                    const x = i * timeStepX;
+                    const y = 100 - (d.avg_time / maxTime) * 90; // Leave 10% margin at top
+                    
+                    if (i === 0) {
+                        timePath = `M ${x} ${y}`;
+                        timeAreaPath = `M ${x} 100 L ${x} ${y}`;
+                    } else {
+                        timePath += ` L ${x} ${y}`;
+                        timeAreaPath += ` L ${x} ${y}`;
+                    }
+                    
+                    // Add point
+                    timeSvg.innerHTML += `<circle cx="${x}" cy="${y}" r="2.5" fill="#a855f7" class="hover:r-4 transition-all" title="${d.avg_time}s"/>`;
+                });
+                
+                // Close area path
+                timeAreaPath += ` L ${(timeDataPoints - 1) * timeStepX} 100 Z`;
+                
+                // Add area fill
+                timeSvg.innerHTML += `<path d="${timeAreaPath}" fill="url(#timeGradient)" opacity="0.4"/>`;
+                
+                // Add line
+                timeSvg.innerHTML += `<path d="${timePath}" stroke="#a855f7" stroke-width="2.5" fill="none" class="drop-shadow-lg"/>`;
                 
                 timeLabels.innerHTML = charts.avg_time_per_day.map(d => `<span>${d.label}</span>`).join('');
             }

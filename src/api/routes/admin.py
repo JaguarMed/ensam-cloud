@@ -428,10 +428,20 @@ async def get_monitoring_charts(
         if count > 0:
             status_counts[status.value] = count
     
-    # Jobs by execution mode
-    cpu_jobs = db.query(func.count(Job.id)).filter(Job.execution_mode == 'cpu').scalar()
-    gpu_jobs = db.query(func.count(Job.id)).filter(Job.execution_mode == 'gpu').scalar()
-    auto_jobs = db.query(func.count(Job.id)).filter(Job.execution_mode == 'auto').scalar()
+    # Jobs by actual execution mode (based on gpu_used, not execution_mode)
+    # Since all jobs are now submitted with 'auto' mode, we show what was actually used
+    # CPU: jobs that actually ran on CPU (gpu_used = False)
+    cpu_jobs = db.query(func.count(Job.id)).filter(
+        Job.gpu_used == False
+    ).scalar() or 0
+    
+    # GPU: jobs that actually ran on GPU (gpu_used = True)
+    gpu_jobs = db.query(func.count(Job.id)).filter(
+        Job.gpu_used == True
+    ).scalar() or 0
+    
+    # Auto is no longer shown since all jobs use auto mode by default
+    auto_jobs = 0
     
     # Average execution time per day
     avg_time_per_day = []
