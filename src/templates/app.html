@@ -539,28 +539,126 @@
                 body: formData
             });
             
+            // Check if response is OK
+            if (!response.ok) {
+                let errorMessage = 'Erreur lors du téléchargement';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.detail || errorData.message || errorMessage;
+                } catch (e) {
+                    errorMessage = `Erreur HTTP ${response.status}: ${response.statusText}`;
+                }
+                showToast(errorMessage, 'error');
+                console.error('Upload error:', errorMessage);
+                return;
+            }
+            
             const result = await response.json();
             
             if (result.success) {
+                // Determine file extension and appropriate pandas function
+                const fileExt = result.filename.split('.').pop().toLowerCase();
+                const readFunction = fileExt === 'csv' ? 'pd.read_csv' : 'pd.read_excel';
+                const filePath = result.file_path || `/app/data/${result.filename}`;
+                
                 // Generate example code to use the uploaded file
-                const exampleCode = `# Fichier chargé: ${result.filename}
+                const exampleCode = `# ============================================
+# Fichier chargé: ${result.filename}
+# ============================================
 import pandas as pd
+import os
+import sys
+
+# Afficher les informations de débogage
+print("=== Informations de débogage ===")
+print(f"Répertoire courant: {os.getcwd()}")
+print(f"Python version: {sys.version}")
+
+# Lister les fichiers disponibles
+print("\\n📁 Fichiers dans /app/:")
+if os.path.exists('/app'):
+    try:
+        print(os.listdir('/app'))
+    except:
+        print("(impossible de lister)")
+
+print("\\n📁 Fichiers dans /app/data/:")
+if os.path.exists('/app/data'):
+    try:
+        files = os.listdir('/app/data')
+        print(files)
+        if files:
+            print(f"✅ {len(files)} fichier(s) trouvé(s)")
+    except Exception as e:
+        print(f"Erreur: {e}")
+else:
+    print("❌ Le répertoire /app/data/ n'existe pas")
+
+# Essayer de trouver le fichier
+filename = '${result.filename}'
+possible_paths = [
+    f'/app/data/{filename}',
+    f'/app/{filename}',
+    filename,
+    f'./data/{filename}',
+    f'./{filename}'
+]
+
+file_path = None
+for path in possible_paths:
+    if os.path.exists(path):
+        file_path = path
+        print(f"\\n✅ Fichier trouvé à: {path}")
+        break
+
+if not file_path:
+    print(f"\\n❌ Fichier '{filename}' non trouvé dans les chemins suivants:")
+    for p in possible_paths:
+        print(f"   - {p}")
+    raise FileNotFoundError(f"Fichier '{filename}' non trouvé")
 
 # Charger le fichier
-df = pd.read_csv('${result.filename}')  # ou pd.read_excel('${result.filename}')
+print(f"\\n📖 Chargement du fichier: {file_path}")
+try:
+    ${fileExt === 'csv' ? `df = pd.read_csv(file_path, encoding='utf-8')` : `df = pd.read_excel(file_path)`}
+    print(f"✅ Fichier chargé avec succès!")
+    print(f"   Shape: {df.shape[0]} lignes, {df.shape[1]} colonnes")
+    print(f"   Colonnes: {list(df.columns)}")
+except ImportError as e:
+    if 'openpyxl' in str(e).lower() or 'xlrd' in str(e).lower():
+        print(f"\\n❌ Erreur: Bibliothèque Excel manquante")
+        print("💡 Solution: openpyxl sera installé automatiquement")
+        print("   Si l'erreur persiste, ajoutez dans votre code:")
+        print("   import subprocess; subprocess.run(['pip', 'install', 'openpyxl'])")
+    raise
+except Exception as e:
+    print(f"\\n❌ Erreur lors du chargement: {type(e).__name__}: {e}")
+    print(f"   Chemin essayé: {file_path}")
+    raise
 
 # Aperçu des données
-print("Shape:", df.shape)
-print("\\nPremières lignes:")
+print("\\n📊 Premières lignes:")
 print(df.head())
 
 # Statistiques
-print("\\nStatistiques:")
+print("\\n📈 Statistiques:")
 print(df.describe())
 
-# Exemple: Filtrer et exporter
+# Exemple: Traitement et export
+# Filtrer les données (remplacez 'colonne' et 'valeur' par vos critères)
 # df_filtered = df[df['colonne'] > valeur]
-# df_filtered.to_excel('resultat.xlsx', index=False)
+
+# Exporter le résultat en Excel
+# Le répertoire de travail est /app/output/, donc les fichiers seront sauvegardés là
+output_file = 'resultat.xlsx'
+print(f"\\n💾 Export vers: {output_file}")
+try:
+    df.to_excel(output_file, index=False)
+    print(f"✅ Fichier Excel créé: {output_file}")
+    print("   Vous pourrez le télécharger après l'exécution du job")
+except Exception as e:
+    print(f"❌ Erreur lors de l'export: {e}")
+    raise
 `;
                 
                 document.getElementById('code-editor').value = exampleCode;
@@ -570,11 +668,14 @@ print(df.describe())
                 console.log('Data Preview:', result.preview);
                 console.log('Statistics:', result.statistics);
             } else {
-                showToast('Erreur lors du téléchargement', 'error');
+                const errorMsg = result.message || result.detail || 'Erreur lors du téléchargement';
+                showToast(errorMsg, 'error');
+                console.error('Upload error:', result);
             }
         } catch (error) {
-            console.error('Upload error:', error);
-            showToast('Erreur lors du téléchargement du fichier', 'error');
+            const errorMsg = error.message || 'Erreur lors du téléchargement du fichier';
+            showToast(errorMsg, 'error');
+            console.error('Upload exception:', error);
         }
     });
     
@@ -733,6 +834,43 @@ print(df.describe())
         ws = new WebSocket(wsUrl);
         const consoleDiv = document.getElementById('console-output');
         
+        // Vérification périodique du statut en parallèle du WebSocket (fallback)
+        let statusCheckInterval = setInterval(async () => {
+            try {
+                const response = await API.get(`/api/jobs/${jobId}`);
+                const job = await response.json();
+                
+                // Si le job est terminé, réinitialiser les boutons
+                if (['success', 'failed', 'cancelled', 'timeout'].includes(job.status)) {
+                    clearInterval(statusCheckInterval);
+                    updateStatusBadge(job.status);
+                    if (job.duration_seconds) {
+                        document.getElementById('info-duration').textContent = job.duration_seconds.toFixed(2) + 's';
+                    }
+                    
+                    // Réinitialiser les boutons
+                    const runButton = document.getElementById('run-button');
+                    const stopButton = document.getElementById('stop-button');
+                    if (runButton) runButton.classList.remove('hidden');
+                    if (stopButton) stopButton.classList.add('hidden');
+                    currentJobId = null;
+                    
+                    // Charger les fichiers téléchargeables si le job a réussi
+                    if (job.status === 'success') {
+                        loadJobFiles(job.id);
+                    }
+                    
+                    // Fermer le WebSocket
+                    if (ws) {
+                        ws.close();
+                        ws = null;
+                    }
+                }
+            } catch (error) {
+                // Ignore errors in status check
+            }
+        }, 2000); // Vérifier toutes les 2 secondes
+        
         ws.onopen = () => {
             consoleDiv.innerHTML = '<p class="text-neon-blue">🔗 Connecté au flux de logs...</p>';
         };
@@ -765,6 +903,7 @@ print(df.describe())
             } else if (data.type === 'status') {
                 updateStatusBadge(data.status);
             } else if (data.type === 'complete') {
+                clearInterval(statusCheckInterval);
                 updateStatusBadge(data.status);
                 if (data.duration) {
                     document.getElementById('info-duration').textContent = data.duration.toFixed(2) + 's';
@@ -774,11 +913,39 @@ print(df.describe())
                 line.className = `mt-2 font-semibold ${data.status === 'success' ? 'text-green-400' : 'text-red-400'}`;
                 line.textContent = `✓ Job terminé: ${data.status.toUpperCase()}`;
                 consoleDiv.appendChild(line);
+                
+                // Job terminé : réafficher le bouton Exécuter et masquer Arrêter
+                const runButton = document.getElementById('run-button');
+                const stopButton = document.getElementById('stop-button');
+                if (runButton) runButton.classList.remove('hidden');
+                if (stopButton) stopButton.classList.add('hidden');
+                currentJobId = null;
+                
+                // Charger les fichiers téléchargeables si le job a réussi
+                if (data.status === 'success' && data.job_id) {
+                    loadJobFiles(data.job_id);
+                }
+                
+                // Fermer la connexion WebSocket
+                if (ws) {
+                    ws.close();
+                    ws = null;
+                }
             }
         };
         
         ws.onerror = () => {
+            clearInterval(statusCheckInterval);
             pollJobStatus(jobId);
+        };
+        
+        ws.onclose = () => {
+            clearInterval(statusCheckInterval);
+            // Si le WebSocket se ferme et qu'on n'a pas encore réinitialisé les boutons,
+            // vérifier le statut du job via polling
+            if (currentJobId === jobId) {
+                pollJobStatus(jobId);
+            }
         };
     }
     
@@ -795,6 +962,15 @@ print(df.describe())
         };
         badge.className = `px-3 py-1 rounded-full text-xs font-medium ${colors[status] || colors.pending}`;
         badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        
+        // Si le job est terminé, réinitialiser les boutons immédiatement
+        if (['success', 'failed', 'cancelled', 'timeout'].includes(status)) {
+            const runButton = document.getElementById('run-button');
+            const stopButton = document.getElementById('stop-button');
+            if (runButton) runButton.classList.remove('hidden');
+            if (stopButton) stopButton.classList.add('hidden');
+            currentJobId = null;
+        }
     }
     
     // Fallback polling
@@ -822,14 +998,22 @@ print(df.describe())
                     if (job.duration_seconds) {
                         document.getElementById('info-duration').textContent = job.duration_seconds.toFixed(2) + 's';
                     }
-                    // Hide stop button, show run button
-                    document.getElementById('run-button').classList.remove('hidden');
-                    document.getElementById('stop-button').classList.add('hidden');
+                    // Hide stop button, show run button - FORCE update
+                    const runButton = document.getElementById('run-button');
+                    const stopButton = document.getElementById('stop-button');
+                    if (runButton) runButton.classList.remove('hidden');
+                    if (stopButton) stopButton.classList.add('hidden');
                     currentJobId = null;
                     
                     // Load downloadable files if job succeeded
                     if (job.status === 'success') {
                         loadJobFiles(job.id);
+                    }
+                    
+                    // Close WebSocket if still open
+                    if (ws) {
+                        ws.close();
+                        ws = null;
                     }
                     return;
                 }

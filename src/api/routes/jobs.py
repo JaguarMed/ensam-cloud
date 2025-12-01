@@ -654,6 +654,9 @@ async def upload_data_file(
     - CSV files (.csv)
     - Excel files (.xlsx, .xls)
     
+    The file is saved and will be available in the Docker container at /app/data/{filename}
+    when you run your code.
+    
     Returns a preview of the data (first 10 rows) and basic statistics.
     """
     # Validate file extension
@@ -670,7 +673,18 @@ async def upload_data_file(
         # Read file content
         content = await file.read()
         
-        # Parse based on file type
+        # Create user-specific upload directory
+        upload_dir = Path(settings.SCRIPTS_DIR) / "uploads" / str(current_user.id)
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save file with sanitized filename
+        safe_filename = "".join(c for c in file.filename if c.isalnum() or c in "._- ")
+        file_path = upload_dir / safe_filename
+        file_path.write_bytes(content)
+        
+        logger.info(f"File uploaded by user {current_user.id}: {safe_filename} ({len(content)} bytes)")
+        
+        # Parse based on file type for preview
         if file_ext == '.csv':
             # Try different encodings
             for encoding in ['utf-8', 'latin-1', 'iso-8859-1']:
@@ -706,17 +720,31 @@ async def upload_data_file(
         
         return {
             "success": True,
-            "filename": file.filename,
+            "filename": safe_filename,
+            "file_path": f"/app/data/{safe_filename}",  # Path in Docker container
             "preview": preview,
             "statistics": stats,
-            "message": f"File '{file.filename}' uploaded successfully. {len(df)} rows, {len(df.columns)} columns."
+            "message": f"File '{safe_filename}' uploaded successfully. {len(df)} rows, {len(df.columns)} columns. The file will be available at /app/data/{safe_filename} in your code."
         }
         
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
-        logger.error(f"Error processing data file: {e}")
+        error_msg = str(e)
+        logger.error(f"Error processing data file: {e}", exc_info=True)
+        
+        # Provide more helpful error messages
+        if "openpyxl" in error_msg.lower() or "xlrd" in error_msg.lower():
+            error_msg = "Erreur: Bibliothèque Excel manquante. Veuillez contacter l'administrateur."
+        elif "decode" in error_msg.lower() or "encoding" in error_msg.lower():
+            error_msg = "Erreur d'encodage. Essayez de sauvegarder le fichier en UTF-8."
+        elif "no such file" in error_msg.lower() or "file not found" in error_msg.lower():
+            error_msg = "Fichier non trouvé. Vérifiez que le fichier existe et est accessible."
+        
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error processing file: {str(e)}"
+            detail=error_msg
         )
 
 
