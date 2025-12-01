@@ -1,6 +1,6 @@
 # Plateforme Cloud Privée pour l'Exécution Distante de Scripts Python avec Support GPU
 
-**ENSAM Rabat - Cloud Computing 2025 - Groupe 4**
+**ENSAM Rabat - Cloud Computing 2025**
 
 ## 📋 Description
 
@@ -344,10 +344,6 @@ Variables d'environnement (`.env`) :
 | `DOCKER_IMAGE_GPU` | Image Docker GPU | nvidia/cuda:12.0 |
 | `GPU_ENABLED` | Activer GPU | true |
 | `RATE_LIMIT_PER_MINUTE` | Limite requêtes | 60 |
-
-## 👥 Équipe - Groupe 4
-
-ENSAM Rabat - Cloud Computing 2025
 
 ## 📄 Licence
 
